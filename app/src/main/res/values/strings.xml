@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Toolbox</string>
+
+    <string name="add_lock_widget">Add lock widget to home screen</string>
+    <string name="request_admin_perm">Grant device admin permission</string>
+    <string name="admin_perm_explanation">Required to lock the screen</string>
+</resources>
