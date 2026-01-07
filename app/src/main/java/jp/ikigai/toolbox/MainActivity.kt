@@ -1,10 +1,10 @@
 package jp.ikigai.toolbox
 
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
+import android.text.TextUtils
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import jp.ikigai.toolbox.receivers.ToolboxDeviceAdminReceiver
+import jp.ikigai.toolbox.services.LockService
 import jp.ikigai.toolbox.ui.theme.ToolboxTheme
 import jp.ikigai.toolbox.ui.widget.LockWidget
 import jp.ikigai.toolbox.ui.widget.LockWidgetReceiver
@@ -53,20 +53,18 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val context = LocalContext.current
 
-    val explanation = stringResource(id = R.string.admin_perm_explanation)
-
     val coroutineScope = rememberCoroutineScope()
 
-    var isAdmin by remember {
+    var serviceEnabled by remember {
         mutableStateOf(false)
     }
 
     LaunchedEffect(context) {
-        isAdmin = checkIsAdmin(context)
+        serviceEnabled = checkAccessibilityEnabled(context)
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        isAdmin = checkIsAdmin(context)
+        serviceEnabled = checkAccessibilityEnabled(context)
     }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -77,7 +75,7 @@ fun MainScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (isAdmin) {
+            if (serviceEnabled) {
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -96,16 +94,14 @@ fun MainScreen() {
             } else {
                 Button(
                     onClick = {
-                        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
-                        val adminReceiver =
-                            ComponentName(context, ToolboxDeviceAdminReceiver::class.java)
-                        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminReceiver)
-                        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, explanation)
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
                         context.startActivity(intent)
                     }
                 ) {
                     Text(
-                        text = stringResource(id = R.string.request_admin_perm)
+                        text = stringResource(id = R.string.request_accessibility_perm)
                     )
                 }
             }
@@ -113,8 +109,18 @@ fun MainScreen() {
     }
 }
 
-fun checkIsAdmin(context: Context): Boolean {
-    val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-    val adminReceiver = ComponentName(context, ToolboxDeviceAdminReceiver::class.java)
-    return dpm.isAdminActive(adminReceiver)
+fun checkAccessibilityEnabled(context: Context): Boolean {
+    val expectedComponentName = "${context.packageName}/${LockService::class.java.canonicalName}"
+    val enabledServices = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+    ) ?: return false
+    val splitter = TextUtils.SimpleStringSplitter(':')
+    splitter.setString(enabledServices)
+    while (splitter.hasNext()) {
+        if (splitter.next().equals(expectedComponentName, ignoreCase = true)) {
+            return true
+        }
+    }
+    return false
 }

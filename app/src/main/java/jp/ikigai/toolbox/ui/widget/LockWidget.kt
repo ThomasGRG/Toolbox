@@ -8,7 +8,6 @@ import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.action.actionStartService
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -28,9 +27,9 @@ class LockWidget : GlanceAppWidget() {
                     modifier = GlanceModifier
                         .fillMaxSize()
                         .background(GlanceTheme.colors.background)
-                        .clickable(
-                            actionStartService<LockService>()
-                        ),
+                        .clickable {
+                            LockService.instance?.lockScreen()
+                        },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
