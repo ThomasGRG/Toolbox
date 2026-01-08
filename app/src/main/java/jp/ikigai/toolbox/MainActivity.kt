@@ -1,7 +1,11 @@
 package jp.ikigai.toolbox
 
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Context.STATUS_BAR_SERVICE
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
@@ -104,6 +108,26 @@ fun MainScreen() {
                         text = stringResource(id = R.string.request_accessibility_perm)
                     )
                 }
+            }
+            Button(
+                onClick = {
+                    val statusBarManager =
+                        context.getSystemService(STATUS_BAR_SERVICE) as StatusBarManager
+                    statusBarManager.requestAddTileService(
+                        ComponentName(
+                            "jp.ikigai.toolbox",
+                            "jp.ikigai.toolbox.services.VibrateTileService",
+                        ),
+                        context.resources.getString(R.string.vibrate_tile_label),
+                        Icon.createWithResource(context, R.drawable.mobile_vibrate_24px),
+                        {},
+                        {},
+                    )
+                }
+            ) {
+                Text(
+                    text = stringResource(id = R.string.add_vibrate_tile)
+                )
             }
         }
     }

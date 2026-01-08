@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Toolbox</string>
 
+    <string name="vibrate_tile_label">Vibrate</string>
+    <string name="add_vibrate_tile">Add vibrate tile to quick settings</string>
+
     <string name="add_lock_widget">Add lock widget to home screen</string>
     <string name="request_accessibility_perm">Enable app in accessibility services</string>
     <string name="perm_explanation">Required to lock the screen</string>
