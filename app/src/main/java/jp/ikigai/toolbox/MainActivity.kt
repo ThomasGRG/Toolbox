@@ -57,6 +57,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val context = LocalContext.current
 
+    val vibrateLabel = stringResource(id = R.string.vibrate_tile_label)
+
     val coroutineScope = rememberCoroutineScope()
 
     var serviceEnabled by remember {
@@ -118,7 +120,7 @@ fun MainScreen() {
                             "jp.ikigai.toolbox",
                             "jp.ikigai.toolbox.services.VibrateTileService",
                         ),
-                        context.resources.getString(R.string.vibrate_tile_label),
+                        vibrateLabel,
                         Icon.createWithResource(context, R.drawable.mobile_vibrate_24px),
                         {},
                         {},
