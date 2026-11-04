@@ -18,11 +18,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package jp.ikigai.toolbox.services
 
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioManager
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 
 class VibrateTileService : TileService() {
+    private val ringerModeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
+                qsTile.state = getTileState()
+                qsTile.updateTile()
+            }
+        }
+    }
+
     // Called when the user adds your tile.
     override fun onTileAdded() {
         super.onTileAdded()
@@ -33,6 +46,10 @@ class VibrateTileService : TileService() {
     // Called when your app can update your tile.
     override fun onStartListening() {
         super.onStartListening()
+        registerReceiver(
+            ringerModeReceiver,
+            IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION)
+        )
         qsTile.state = getTileState()
         qsTile.updateTile()
     }
@@ -40,6 +57,7 @@ class VibrateTileService : TileService() {
     // Called when your app can no longer update your tile.
     override fun onStopListening() {
         super.onStopListening()
+        unregisterReceiver(ringerModeReceiver)
     }
 
     // Called when the user taps on your tile in an active or inactive state.
@@ -52,7 +70,7 @@ class VibrateTileService : TileService() {
             } else {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
             }
-        } catch (exception: Exception) {
+        } catch (_: Exception) {
         }
         qsTile.state = getTileState()
         qsTile.updateTile()
