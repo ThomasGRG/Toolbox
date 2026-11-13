@@ -16,8 +16,8 @@ android {
         applicationId = "jp.ikigai.toolbox"
         minSdk = 33
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 5
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
