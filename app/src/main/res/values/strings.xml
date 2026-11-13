@@ -1,10 +1,149 @@
 <resources>
     <string name="app_name">Toolbox</string>
 
+    <string name="empty"></string>
+    <string name="attribution_desc">Attribution description</string>
+
+    <string name="tiles">Quick Settings Tiles</string>
+    <string name="widgets">Widgets</string>
+    <string name="services">Services</string>
+    <string name="permissions">Permissions</string>
+
+    <string name="lock_device">Lock</string>
+    <string name="perm_explanation">Required to lock the screen.</string>
+
     <string name="vibrate_tile_label">Vibrate</string>
     <string name="add_vibrate_tile">Add vibrate tile to quick settings</string>
 
-    <string name="add_lock_widget">Add lock widget to home screen</string>
-    <string name="request_accessibility_perm">Enable app in accessibility services</string>
-    <string name="perm_explanation">Required to lock the screen</string>
+    <string name="sunlight_monitor">Sunlight monitor</string>
+    <string name="sunlight_monitor_desc">Adaptive brightness under direct sunlight</string>
+    <string name="net_speed_mon">NetSpeedMon</string>
+    <string name="net_speed_mon_desc">View real-time internet speed and data usage</string>
+    <string name="sound_fixer">Sound Fixer</string>
+    <string name="sound_fixer_desc">Fix low sound on Pixel 8 devices with GOS</string>
+    <string name="app_notifier">App Notifier</string>
+    <string name="app_notifier_desc">Get notifications for app installs and updates</string>
+
+    <string name="post_notification">Post notifications</string>
+    <string name="read_phone_state">Read phone state</string>
+    <string name="battery_optimization">Exempt from battery optimization</string>
+    <string name="write_settings">Write system settings</string>
+    <string name="schedule_exact_alarms">Schedule exact alarms</string>
+    <string name="accessibility_service">Accessibility service</string>
+    <string name="accessibility_service_desc">This widget requires accessibility service to be enabled</string>
+
+    <string name="select_ringtone">Select ringtone</string>
+    <string name="no_ringtone_selected">No ringtone selected</string>
+
+    <string name="tile_added">Tile added</string>
+    <string name="tile_already_added">Tile already added</string>
+    <string name="tile_not_added">Tile could not be added</string>
+    <string name="error_adding_tile">Error adding tile</string>
+
+    <string name="grant_permission">Grant</string>
+    <string name="permission_granted">Granted</string>
+    <string name="save">Save</string>
+    <string name="set">Set</string>
+    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="settings">Settings</string>
+    <string name="logs">Logs</string>
+    <string name="no_logs_found">No logs found</string>
+
+    <plurals name="apps_updated_header">
+        <item quantity="one">%d app updated</item>
+        <item quantity="other">%d apps updated</item>
+    </plurals>
+
+    <plurals name="apps_updated_footer">
+        <item quantity="one">%d other</item>
+        <item quantity="other">%d others</item>
+    </plurals>
+
+    <string name="successfully_installed">Successfully installed</string>
+
+    <string name="simple_template">%1$s (%2$s)</string>
+    <string name="enhanced_template">%1$s (%2$s -> %3$s)</string>
+
+    <string name="apps_updated_1">%s</string>
+    <string name="apps_updated_2">%1$s and %2$s</string>
+    <string name="apps_updated_3">%1$s, %2$s, and %3$s</string>
+    <string name="apps_updated_4">%1$s, %2$s, %3$s, and %4$s</string>
+    <string name="apps_updated_other">%1$s, %2$s, %3$s, %4$s, and %5$s</string>
+
+    <string name="app_updates">App updates</string>
+    <string name="app_installs">App installs</string>
+
+    <string name="toolbox_background_service">Background service</string>
+    <string name="toolbox_background_service_enabled">Background service enabled</string>
+    <string name="net_speed_mon_monitor">NetSpeedMon Monitor</string>
+    <string name="net_speed_mon_content">Down: %1$s  Up: %2$s</string>
+
+    <string name="live_sensor_name">Sensor: %s</string>
+    <string name="live_sensor_vendor">Vendor: %s</string>
+    <string name="live_sensor_max_range">Maximum range: %s lux</string>
+    <string name="live_sensor_resolution">Resolution: %s lux</string>
+    <string name="live_sensor_power">Power: %s mA</string>
+    <string name="live_sensor_unavailable">Sensor unavailable</string>
+    <string name="live_sensor_hint">
+        Observe readings in your normal indoor and outdoor conditions. Set the high threshold above your usual indoor readings and the low threshold below the high threshold.
+    </string>
+
+    <string name="sunlight_start_outside_schedule_hint">
+        Service will automatically start at the specified time.
+    </string>
+
+    <string name="schedule_hint">Local time. Overnight schedules are supported.</string>
+
+    <string name="activation_threshold">Activation threshold (lux)</string>
+    <string name="deactivation_threshold">Deactivation threshold (lux)</string>
+    <string name="threshold_hint">Activate at or above high. Deactivate at or below low.</string>
+    <string name="invalid_threshold_val">Enter a valid number between 1 &amp; %d</string>
+    <string name="invalid_threshold_config">Activation threshold must be greater than deactivation threshold</string>
+
+    <string name="caught_exception">Caught exception</string>
+
+    <string name="setup_alarms">Alarms set up</string>
+    <string name="time_is_between">Current time between schedule</string>
+    <string name="alarm_received">Received alarm</string>
+    <string name="time_zone_changed">Device time zone changed</string>
+    <string name="time_changed">Device time changed</string>
+    <string name="date_changed">Device date changed</string>
+
+    <string name="sunlight_above_threshold">Sunlight above threshold</string>
+    <string name="sunlight_below_threshold">Sunlight below threshold</string>
+    <string name="set_brightness">Set brightness level</string>
+    <string name="set_brightness_fail">Set brightness failed</string>
+
+    <string name="incoming_call">Incoming call</string>
+    <string name="call_idle_off_hook">Call state - Idle/Off hook</string>
+    <string name="player_start">Playback started</string>
+    <string name="player_error">Playback error</string>
+    <string name="player_released">Player released</string>
+    <string name="ring_volume_zero">Ring volume is zero</string>
+    <string name="on_vibrate">Device on vibrate</string>
+    <string name="on_silent">Device on silent</string>
+    <string name="dnd_on">Do not disturb is on</string>
+    <string name="ringtone_not_set">Ringtone not set</string>
+    <string name="file_not_exist">File does not exist</string>
+
+    <string name="package_added">Package added</string>
+    <string name="package_upgraded">Package upgraded</string>
+    <string name="package_removed">Package removed</string>
+    <string name="replay_installs">Replay app install notifications</string>
+    <string name="replay_updates">Replay app update notifications</string>
+
+    <string name="service_created">Service created</string>
+    <string name="service_destroyed">Service destroyed</string>
+    <string name="service_running">Service is running</string>
+    <string name="service_stopped">Service is stopped</string>
+
+    <string name="monitor_running">Monitor is running</string>
+    <string name="monitor_paused">Monitor is paused</string>
+    <string name="monitor_stopped">Monitor is stopped</string>
+
+    <string name="screen_off">Screen is off</string>
+    <string name="screen_on">Screen is on</string>
 </resources>

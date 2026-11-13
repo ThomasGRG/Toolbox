@@ -63,7 +63,7 @@ class VibrateTileService : TileService() {
     // Called when the user taps on your tile in an active or inactive state.
     override fun onClick() {
         super.onClick()
-        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        val audioManager = getSystemService(AudioManager::class.java)
         try {
             if (audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE) {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
