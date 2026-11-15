@@ -18,9 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package jp.ikigai.toolbox.services
 
 import android.accessibilityservice.AccessibilityService
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import jp.ikigai.toolbox.utils.startToolboxService
 
-class LockService : AccessibilityService() {
+class ToolboxAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -31,11 +33,25 @@ class LockService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
+    override fun onKeyEvent(event: KeyEvent?): Boolean {
+        when (event?.keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
+                return false
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
+                return false
+            }
+        }
+        return super.onKeyEvent(event)
+    }
+
     fun lockScreen() {
         performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
     }
 
     companion object {
-        var instance: LockService? = null
+        var instance: ToolboxAccessibilityService? = null
     }
 }

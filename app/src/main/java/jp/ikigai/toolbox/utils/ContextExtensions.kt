@@ -11,7 +11,7 @@ import android.provider.Settings
 import android.text.TextUtils
 import androidx.core.net.toUri
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
-import jp.ikigai.toolbox.services.LockService
+import jp.ikigai.toolbox.services.ToolboxAccessibilityService
 import jp.ikigai.toolbox.services.ToolboxService
 import java.io.File
 import java.io.FileOutputStream
@@ -95,7 +95,7 @@ fun Context.requestWriteSettings() {
 val Context.isAccessibilityServiceEnabled: Boolean
     get() {
         val expectedComponentName =
-            "${packageName}/${LockService::class.java.canonicalName}"
+            "${packageName}/${ToolboxAccessibilityService::class.java.canonicalName}"
         val enabledServices = Settings.Secure.getString(
             contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES

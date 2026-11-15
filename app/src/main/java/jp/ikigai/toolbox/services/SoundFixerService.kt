@@ -19,6 +19,7 @@ import java.io.File
 class SoundFixerService(private val context: Context) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SOUND_FIXER"
+        const val ACTION_STOP_PLAYBACK = "ACTION_STOP_PLAYBACK"
     }
 
     private var ringing = false
@@ -30,19 +31,28 @@ class SoundFixerService(private val context: Context) {
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
     fun onStartCommand(intent: Intent?) {
-        if (intent != null && intent.action == ACTION_STOP) {
-            onDestroy()
-            return
-        } else if (
-            !ToolboxServiceState.soundFixerState.value &&
-            ToolboxPreferences.isSoundFixerEnabled(context)
-        ) {
-            ToolboxServiceState.updateSoundFixerState(true)
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.monitor_running,
-            )
-            registerCallStateListener()
+        when (intent?.action) {
+            ACTION_STOP -> {
+                onDestroy()
+            }
+
+            ACTION_STOP_PLAYBACK -> {
+                stopMusic()
+            }
+
+            else -> {
+                if (
+                    !ToolboxServiceState.soundFixerState.value &&
+                    ToolboxPreferences.isSoundFixerEnabled(context)
+                ) {
+                    ToolboxServiceState.updateSoundFixerState(true)
+                    ToolboxServiceState.log(
+                        serviceNameResId = R.string.sound_fixer,
+                        msgResId = R.string.monitor_running,
+                    )
+                    registerCallStateListener()
+                }
+            }
         }
     }
 

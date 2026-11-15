@@ -31,7 +31,7 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.services.LockService
+import jp.ikigai.toolbox.services.ToolboxAccessibilityService
 
 class LockWidget : GlanceAppWidget() {
     override suspend fun provideGlance(
@@ -45,7 +45,7 @@ class LockWidget : GlanceAppWidget() {
                         .fillMaxSize()
                         .background(GlanceTheme.colors.background)
                         .clickable {
-                            LockService.instance?.lockScreen()
+                            ToolboxAccessibilityService.instance?.lockScreen()
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalAlignment = Alignment.CenterVertically,
