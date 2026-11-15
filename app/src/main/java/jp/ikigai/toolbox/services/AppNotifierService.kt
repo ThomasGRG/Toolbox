@@ -321,6 +321,7 @@ class AppNotifierService(private val context: Context) {
             packageName = pkgInfo.packageName,
             label = pkgInfo.applicationInfo?.loadLabel(context.packageManager).toString(),
             updatedAt = System.currentTimeMillis(),
+            version = pkgInfo.versionName,
             isInstall = true,
         )
 
@@ -329,18 +330,18 @@ class AppNotifierService(private val context: Context) {
             insert(context, info)
         }
 
-        buildAppInstallNotification(info.packageName, info.label, getIcon(pkgInfo))
+        buildAppInstallNotification(info, getIcon(pkgInfo))
     }
 
-    private fun buildAppInstallNotification(packageName: String, label: String, icon: Bitmap?) {
+    private fun buildAppInstallNotification(info: AppUpdateInfo, icon: Bitmap?) {
         createNotificationChannel(APP_INSTALL_CHANNEL_ID, R.string.app_installs)
 
-        val code = packageName.hashCode()
+        val code = info.packageName.hashCode()
 
         val dismissedIntent =
             Intent(context, InstallNotificationDismissedReceiver::class.java).apply {
                 setPackage(BuildConfig.APPLICATION_ID)
-                putExtra(PACKAGE_NAME_EXTRA, packageName)
+                putExtra(PACKAGE_NAME_EXTRA, info.packageName)
             }
 
         val pendingDismissedIntent =
@@ -352,9 +353,15 @@ class AppNotifierService(private val context: Context) {
 
         val builder = NotificationCompat.Builder(context, APP_INSTALL_CHANNEL_ID)
             .setSmallIcon(R.drawable.app_updated)
-            .setContentTitle(label)
+            .setContentTitle(info.label)
             .setContentText(context.getString(R.string.successfully_installed))
-            .setStyle(NotificationCompat.BigTextStyle())
+            .setStyle(NotificationCompat.BigTextStyle().also {
+                if (info.version != null) {
+                    it.bigText("${info.packageName} (${info.version})")
+                } else {
+                    it.bigText(info.packageName)
+                }
+            })
             .setLargeIcon(icon)
             .setDeleteIntent(pendingDismissedIntent)
             .setGroup(APP_INSTALL_GROUP)
@@ -430,7 +437,7 @@ class AppNotifierService(private val context: Context) {
 
         for (install in installs) {
             getPackageInfoSafely(install.packageName)?.let {
-                buildAppInstallNotification(install.packageName, install.label, getIcon(it))
+                buildAppInstallNotification(install, getIcon(it))
             }
         }
     }
