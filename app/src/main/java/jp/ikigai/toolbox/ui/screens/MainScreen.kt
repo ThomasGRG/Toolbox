@@ -201,6 +201,7 @@ fun MainScreen() {
                 showSoundFixerSettingsDialog = false
             },
             canStart = hasReadPhoneStatePermission,
+            isRunning = soundFixerState,
             selectedFileName = soundFixerRingtone,
             ringtoneExists = ringtoneExists,
             audioPickerLauncher = audioPickerLauncher,

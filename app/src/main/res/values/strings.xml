@@ -34,6 +34,7 @@
 
     <string name="select_ringtone">Select ringtone</string>
     <string name="no_ringtone_selected">No ringtone selected</string>
+    <string name="running">Running</string>
 
     <string name="tile_added">Tile added</string>
     <string name="tile_already_added">Tile already added</string>

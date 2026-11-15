@@ -23,6 +23,7 @@ import jp.ikigai.toolbox.utils.startToolboxService
 fun SoundFixerSettingsDialog(
     dismiss: () -> Unit,
     canStart: Boolean,
+    isRunning: Boolean,
     selectedFileName: String?,
     ringtoneExists: Boolean,
     audioPickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
@@ -45,11 +46,14 @@ fun SoundFixerSettingsDialog(
                 onClick = {
                     ToolboxPreferences.setSoundFixerEnabled(context, true)
                     context.startToolboxService()
+                    dismiss()
                 },
-                enabled = canStart && ringtoneExists,
+                enabled = canStart && ringtoneExists && !isRunning,
             ) {
                 Text(
-                    text = stringResource(R.string.start)
+                    text = stringResource(
+                        if (isRunning) R.string.running else R.string.start
+                    )
                 )
             }
         },
