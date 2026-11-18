@@ -15,6 +15,11 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.ToolboxServiceState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
 class ToolboxService : Service() {
 
@@ -55,6 +60,9 @@ class ToolboxService : Service() {
     private lateinit var soundFixerService: SoundFixerService
     private lateinit var sunlightMonitorService: SunlightMonitorService
 
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private lateinit var runningServicesJob: Job
+
     override fun onCreate() {
         super.onCreate()
         ToolboxServiceState.log(
@@ -73,6 +81,25 @@ class ToolboxService : Service() {
         }
 
         registerReceiver(screenStateReceiver, filter)
+
+        runningServicesJob = coroutineScope.launch {
+            combine(
+                ToolboxServiceState.appNotifierState,
+                ToolboxServiceState.netSpeedMonState,
+                ToolboxServiceState.soundFixerState,
+                ToolboxServiceState.sunlightMonitorState,
+            ) { appNotifierState, netSpeedMonState, soundFixerState, sunlightMonitorState ->
+                val runningServices = mutableListOf<String>()
+                if (appNotifierState) runningServices.add(getString(R.string.app_notifier))
+                if (netSpeedMonState) runningServices.add(getString(R.string.net_speed_mon))
+                if (soundFixerState) runningServices.add(getString(R.string.sound_fixer))
+                if (sunlightMonitorState) runningServices.add(getString(R.string.sunlight_monitor))
+                runningServices
+            }.collect {
+                val notification = buildForegroundNotification(it)
+                notificationManager.notify(NOTIFICATION_ID, notification)
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -118,7 +145,7 @@ class ToolboxService : Service() {
         notificationManager.createNotificationChannel(notificationChannel)
     }
 
-    private fun startForegroundCompat() {
+    private fun buildForegroundNotification(runningServices: List<String> = emptyList()): Notification {
         val stopActionIntent = Intent(this, ToolboxService::class.java).apply {
             action = ACTION_STOP
         }
@@ -133,7 +160,7 @@ class ToolboxService : Service() {
             getString(R.string.stop),
             stopPendingIntent
         ).build()
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.home_repair_service)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.toolbox_background_service_enabled))
@@ -142,8 +169,25 @@ class ToolboxService : Service() {
             .setAllowSystemGeneratedContextualActions(false)
             .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
             .addAction(stopAction)
-            .build()
 
+        if (runningServices.isNotEmpty()) {
+            builder.setStyle(
+                NotificationCompat.BigTextStyle().also {
+                    it.bigText(
+                        getString(
+                            R.string.running_services,
+                            runningServices.joinToString(),
+                        ),
+                    )
+                }
+            )
+        }
+
+        return builder.build()
+    }
+
+    private fun startForegroundCompat() {
+        val notification = buildForegroundNotification()
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(
                 NOTIFICATION_ID,
@@ -159,6 +203,7 @@ class ToolboxService : Service() {
     }
 
     override fun onDestroy() {
+        runningServicesJob.cancel()
         ToolboxServiceState.updateToolboxState(false)
         ToolboxServiceState.log(
             serviceNameResId = R.string.app_name,
