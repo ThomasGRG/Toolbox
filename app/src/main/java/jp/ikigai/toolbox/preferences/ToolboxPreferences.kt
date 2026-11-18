@@ -10,6 +10,7 @@ import org.json.JSONObject
 
 object ToolboxPreferences {
     private const val PREF_NAME = "ToolboxPrefs"
+    private const val TOOLBOX_ENABLED = "toolbox_enabled"
     private const val VERSION_CODE = "version_code"
     private const val VERSION_NAME = "version_name"
 
@@ -33,6 +34,16 @@ object ToolboxPreferences {
     // AppNotifier Pref Keys
     private const val APP_NOTIFIER_ENABLED = "app_notifier_enabled"
     private const val APP_UPDATE_INFO_LIST = "app_update_info_list"
+
+    fun setToolboxEnabled(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putBoolean(TOOLBOX_ENABLED, enabled) }
+    }
+
+    fun isToolboxEnabled(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(TOOLBOX_ENABLED, false)
+    }
 
     fun setSunlightOriginalBrightnessLevel(context: Context, value: Int) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)

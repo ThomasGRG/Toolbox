@@ -200,7 +200,7 @@ fun MainScreen() {
             dismiss = {
                 showSoundFixerSettingsDialog = false
             },
-            canStart = hasReadPhoneStatePermission,
+            canStart = hasNotificationPermission && hasReadPhoneStatePermission,
             isRunning = soundFixerState,
             selectedFileName = soundFixerRingtone,
             ringtoneExists = ringtoneExists,
@@ -250,12 +250,17 @@ fun MainScreen() {
             ServiceCard(
                 serviceName = stringResource(R.string.app_name),
                 serviceDesc = null,
+                permissionList = listOf(
+                    stringResource(R.string.post_notification)
+                ),
                 canStart = hasNotificationPermission,
                 isRunning = toolboxState,
                 startService = {
+                    ToolboxPreferences.setToolboxEnabled(context, true)
                     context.startToolboxService()
                 },
                 stopService = {
+                    ToolboxPreferences.setToolboxEnabled(context, false)
                     context.stopToolboxService(ToolboxService.ACTION_STOP)
                 },
                 serviceSettings = null,
@@ -345,9 +350,13 @@ fun MainScreen() {
             ServiceCard(
                 serviceName = stringResource(R.string.app_notifier),
                 serviceDesc = stringResource(R.string.app_notifier_desc),
+                permissionList = listOf(
+                    stringResource(R.string.post_notification)
+                ),
                 canStart = hasNotificationPermission,
                 isRunning = appNotifierState,
                 startService = {
+                    ToolboxPreferences.setToolboxEnabled(context, true)
                     ToolboxPreferences.setAppNotifierEnabled(context, true)
                     context.startToolboxService()
                 },
@@ -362,9 +371,13 @@ fun MainScreen() {
             ServiceCard(
                 serviceName = stringResource(R.string.net_speed_mon),
                 serviceDesc = stringResource(R.string.net_speed_mon_desc),
+                permissionList = listOf(
+                    stringResource(R.string.post_notification)
+                ),
                 canStart = hasNotificationPermission,
                 isRunning = netSpeedMonState,
                 startService = {
+                    ToolboxPreferences.setToolboxEnabled(context, true)
                     ToolboxPreferences.setNetSpeedMonEnabled(context, true)
                     context.startToolboxService()
                 },
@@ -379,10 +392,15 @@ fun MainScreen() {
             ServiceCard(
                 serviceName = stringResource(R.string.sound_fixer),
                 serviceDesc = stringResource(R.string.sound_fixer_desc),
-                canStart = hasReadPhoneStatePermission,
+                permissionList = listOf(
+                    stringResource(R.string.post_notification),
+                    stringResource(R.string.read_phone_state),
+                ),
+                canStart = hasNotificationPermission && hasReadPhoneStatePermission,
                 isRunning = soundFixerState,
                 startService = {
                     if (ringtoneExists) {
+                        ToolboxPreferences.setToolboxEnabled(context, true)
                         ToolboxPreferences.setSoundFixerEnabled(context, true)
                         context.startToolboxService()
                     } else {
@@ -402,13 +420,19 @@ fun MainScreen() {
             ServiceCard(
                 serviceName = stringResource(R.string.sunlight_monitor),
                 serviceDesc = stringResource(R.string.sunlight_monitor_desc),
-                canStart = canWriteSettings && canScheduleExactAlarms,
+                permissionList = listOf(
+                    stringResource(R.string.post_notification),
+                    stringResource(R.string.write_settings),
+                    stringResource(R.string.schedule_exact_alarms),
+                ),
+                canStart = hasNotificationPermission && canWriteSettings && canScheduleExactAlarms,
                 isRunning = sunlightMonitorState,
                 startService = {
                     if (
                         ToolboxPreferences.getSunlightActivateThreshold(context) != -1 &&
                         ToolboxPreferences.getSunlightDeactivateThreshold(context) != -1
                     ) {
+                        ToolboxPreferences.setToolboxEnabled(context, true)
                         ToolboxPreferences.setSunlightMonEnabled(context, true)
                         if (ToolboxPreferences.getSunlightSchedule(context).isTimeBetween()) {
                             context.startToolboxService()

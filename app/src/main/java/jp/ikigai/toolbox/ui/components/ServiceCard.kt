@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import jp.ikigai.toolbox.R
 
@@ -22,6 +23,7 @@ import jp.ikigai.toolbox.R
 fun ServiceCard(
     serviceName: String,
     serviceDesc: String?,
+    permissionList: List<String>,
     canStart: Boolean,
     isRunning: Boolean,
     startService: () -> Unit,
@@ -44,6 +46,13 @@ fun ServiceCard(
             serviceDesc?.let {
                 Text(
                     text = it,
+                )
+            }
+            if (permissionList.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.required_permissions, permissionList.joinToString()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontStyle = FontStyle.Italic,
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))

@@ -44,6 +44,7 @@ fun SoundFixerSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    ToolboxPreferences.setToolboxEnabled(context, true)
                     ToolboxPreferences.setSoundFixerEnabled(context, true)
                     context.startToolboxService()
                     dismiss()

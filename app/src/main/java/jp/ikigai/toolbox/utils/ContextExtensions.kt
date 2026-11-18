@@ -17,6 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 fun Context.startToolboxService() {
+    if (!ToolboxPreferences.isToolboxEnabled(this)) return
     startForegroundService(
         Intent(
             this,
@@ -26,6 +27,7 @@ fun Context.startToolboxService() {
 }
 
 fun Context.startToolboxService(action: String) {
+    if (!ToolboxPreferences.isToolboxEnabled(this)) return
     startForegroundService(
         Intent(
             this,

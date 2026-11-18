@@ -255,7 +255,9 @@ fun SunlightMonitorSettingsDialog(
                                 endMinute = endTimePickerState.minute,
                             )
                         )
-                        context.startToolboxService(SunlightMonitorService.ACTION_UPDATE_THRESHOLDS)
+                        if (ToolboxPreferences.isToolboxEnabled(context)) {
+                            context.startToolboxService(SunlightMonitorService.ACTION_UPDATE_THRESHOLDS)
+                        }
                         dismiss()
                     }
                 },

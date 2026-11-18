@@ -33,6 +33,8 @@
     <string name="accessibility_service">Accessibility service</string>
     <string name="accessibility_service_desc">This widget requires accessibility service to be enabled</string>
 
+    <string name="required_permissions">Required permissions: %s</string>
+
     <string name="select_ringtone">Select ringtone</string>
     <string name="no_ringtone_selected">No ringtone selected</string>
     <string name="running">Running</string>
