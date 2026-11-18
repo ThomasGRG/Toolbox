@@ -20,6 +20,8 @@ package jp.ikigai.toolbox.services
 import android.accessibilityservice.AccessibilityService
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.utils.startToolboxService
 
 class ToolboxAccessibilityService : AccessibilityService() {
@@ -27,6 +29,10 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        ToolboxServiceState.log(
+            serviceNameResId = R.string.toolbox_accessibility_service,
+            msgResId = R.string.service_connected,
+        )
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
@@ -36,10 +42,18 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         when (event?.keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP -> {
+                ToolboxServiceState.log(
+                    serviceNameResId = R.string.toolbox_accessibility_service,
+                    msgResId = R.string.volume_up_pressed,
+                )
                 startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
                 return false
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                ToolboxServiceState.log(
+                    serviceNameResId = R.string.toolbox_accessibility_service,
+                    msgResId = R.string.volume_down_pressed,
+                )
                 startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
                 return false
             }

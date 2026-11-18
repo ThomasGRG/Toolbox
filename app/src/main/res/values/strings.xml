@@ -23,6 +23,7 @@
     <string name="sound_fixer_desc">Fix low sound on Pixel 8 devices with GOS</string>
     <string name="app_notifier">App Notifier</string>
     <string name="app_notifier_desc">Get notifications for app installs and updates</string>
+    <string name="toolbox_accessibility_service">Toolbox accessibility service</string>
 
     <string name="post_notification">Post notifications</string>
     <string name="read_phone_state">Read phone state</string>
@@ -129,6 +130,8 @@
     <string name="dnd_on">Do not disturb is on</string>
     <string name="ringtone_not_set">Ringtone not set</string>
     <string name="file_not_exist">File does not exist</string>
+    <string name="volume_down_pressed">Volume down pressed</string>
+    <string name="volume_up_pressed">Volume up pressed</string>
 
     <string name="package_added">Package added</string>
     <string name="package_upgraded">Package upgraded</string>
@@ -136,6 +139,7 @@
     <string name="replay_installs">Replay app install notifications</string>
     <string name="replay_updates">Replay app update notifications</string>
 
+    <string name="service_connected">Service connected</string>
     <string name="service_created">Service created</string>
     <string name="service_destroyed">Service destroyed</string>
     <string name="service_running">Service is running</string>
