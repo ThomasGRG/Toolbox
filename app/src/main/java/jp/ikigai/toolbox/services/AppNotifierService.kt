@@ -141,7 +141,7 @@ class AppNotifierService(private val context: Context) {
             }
 
             if (info.packageName == BuildConfig.APPLICATION_ID)
-                ToolboxPreferences.saveVersionCode(context, versionCode)
+                ToolboxPreferences.saveVersion(context, versionCode, info.versionName)
         }
 
         context.registerReceiver(
@@ -161,15 +161,19 @@ class AppNotifierService(private val context: Context) {
 
     private fun handlePackageUpgrade() {
         if (!ToolboxPreferences.isAppNotifierEnabled(context) || ToolboxServiceState.appNotifierState.value) return
-        start()
         getPackageInfoSafely(BuildConfig.APPLICATION_ID)?.let {
             val versionCode = PackageInfoCompat.getLongVersionCode(it)
             if (versionCode >= ToolboxPreferences.getVersionCode(context)) {
+                ToolboxPreferences.getVersionName(context)?.let { versionName ->
+                    packageNameVersionNameMap[it.packageName] = versionName
+                }
                 handleAppUpdateNotification(it)
+                packageNameVersionNameMap.clear()
             }
             replayAppUpdates()
             replayAppInstalls()
         }
+        start()
     }
 
     private fun getPackageInfoSafely(packageName: String): PackageInfo? {

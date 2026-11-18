@@ -11,6 +11,7 @@ import org.json.JSONObject
 object ToolboxPreferences {
     private const val PREF_NAME = "ToolboxPrefs"
     private const val VERSION_CODE = "version_code"
+    private const val VERSION_NAME = "version_name"
 
     // SunlightMonitor Pref Keys
     private const val SUNLIGHT_MON_ENABLED = "sunlight_mon_enabled"
@@ -134,14 +135,22 @@ object ToolboxPreferences {
         return prefs.getBoolean(APP_NOTIFIER_ENABLED, false)
     }
 
-    fun saveVersionCode(context: Context, versionCode: Long) {
+    fun saveVersion(context: Context, versionCode: Long, versionName: String?) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit { putLong(VERSION_CODE, versionCode) }
+        prefs.edit {
+            putLong(VERSION_CODE, versionCode)
+            putString(VERSION_NAME, versionName)
+        }
     }
 
     fun getVersionCode(context: Context): Long {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getLong(VERSION_CODE, 0)
+    }
+
+    fun getVersionName(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(VERSION_NAME, null)
     }
 
     fun saveAppUpdateInfoList(context: Context, appInfoList: List<AppUpdateInfo>) {
