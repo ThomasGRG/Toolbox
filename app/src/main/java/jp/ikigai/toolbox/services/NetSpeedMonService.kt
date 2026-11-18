@@ -14,7 +14,7 @@ import android.graphics.Typeface
 import android.net.TrafficStats
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
@@ -31,7 +31,8 @@ class NetSpeedMonService(private val context: Context) {
         const val NOTIFICATION_ID = 16249
     }
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val handlerThread = HandlerThread("NetSpeedMon").apply { start() }
+    private val handler = Handler(handlerThread.looper)
 
     private var previousRxBytes: Long = 0
     private var previousTxBytes: Long = 0
@@ -78,13 +79,6 @@ class NetSpeedMonService(private val context: Context) {
     private fun startMon() {
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || ToolboxServiceState.netSpeedMonState.value) return
         createNotificationChannels()
-        updateNotification(
-            Pair("-", "-"),
-            "--",
-            "--",
-            "--",
-            "--"
-        )
         previousRxBytes = TrafficStats.getTotalRxBytes()
         previousTxBytes = TrafficStats.getTotalTxBytes()
         sessionStartRxBytes = TrafficStats.getTotalRxBytes()
@@ -100,6 +94,7 @@ class NetSpeedMonService(private val context: Context) {
     private fun pauseMon() {
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || !ToolboxServiceState.netSpeedMonState.value) return
         handler.removeCallbacks(calcSpeedRunnable)
+        notificationManager.cancel(NOTIFICATION_ID)
         ToolboxServiceState.log(
             serviceNameResId = R.string.net_speed_mon,
             msgResId = R.string.monitor_paused
@@ -108,7 +103,9 @@ class NetSpeedMonService(private val context: Context) {
 
     private fun resumeMon() {
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || !ToolboxServiceState.netSpeedMonState.value) return
-        handler.post(calcSpeedRunnable)
+        previousRxBytes = TrafficStats.getTotalRxBytes()
+        previousTxBytes = TrafficStats.getTotalTxBytes()
+        handler.postDelayed(calcSpeedRunnable, intervalMs)
         ToolboxServiceState.log(
             serviceNameResId = R.string.net_speed_mon,
             msgResId = R.string.monitor_running
@@ -120,6 +117,7 @@ class NetSpeedMonService(private val context: Context) {
         sessionStartTxBytes = 0
 
         handler.removeCallbacks(calcSpeedRunnable)
+        handlerThread.quitSafely()
 
         notificationManager.cancel(NOTIFICATION_ID)
 
