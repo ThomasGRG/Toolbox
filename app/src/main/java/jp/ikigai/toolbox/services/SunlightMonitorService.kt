@@ -8,12 +8,18 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.provider.Settings
 import android.util.Log
-import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.data.isTimeBetween
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 
-class SunlightMonitorService(private val context: Context) {
+class SunlightMonitorService(
+    private val context: Context,
+    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
+) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SUNLIGHT"
         const val ACTION_UPDATE_THRESHOLDS = "ACTION_UPDATE_THRESHOLDS"
@@ -62,9 +68,9 @@ class SunlightMonitorService(private val context: Context) {
     fun onDestroy() {
         if (!ToolboxServiceState.sunlightMonitorState.value) return
         ToolboxServiceState.updateSunlightMonitorState(false)
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.sunlight_monitor,
-            msgResId = R.string.monitor_stopped,
+        serviceLogDao.insert(
+            serviceType = ServiceType.SUNLIGHT_MON,
+            logMessage = LogMessage.MON_STOPPED,
         )
         restoreBrightnessLevel()
         stopSensor()
@@ -80,9 +86,9 @@ class SunlightMonitorService(private val context: Context) {
             return
         }
         ToolboxServiceState.updateSunlightMonitorState(true)
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.sunlight_monitor,
-            msgResId = R.string.monitor_running,
+        serviceLogDao.insert(
+            serviceType = ServiceType.SUNLIGHT_MON,
+            logMessage = LogMessage.MON_RUNNING,
         )
         startSensor()
     }
@@ -108,9 +114,9 @@ class SunlightMonitorService(private val context: Context) {
             luxValue >= activateThreshold -> {
                 if (isActive) return
                 isActive = true
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sunlight_monitor,
-                    msgResId = R.string.sunlight_above_threshold
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.ABOVE_THRESHOLD,
                 )
                 ToolboxPreferences.setSunlightOriginalBrightnessLevel(
                     context,
@@ -125,9 +131,9 @@ class SunlightMonitorService(private val context: Context) {
             luxValue <= deactivateThreshold -> {
                 if (!isActive) return
                 isActive = false
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sunlight_monitor,
-                    msgResId = R.string.sunlight_below_threshold
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.BELOW_THRESHOLD,
                 )
                 restoreBrightnessLevel()
             }
@@ -157,22 +163,22 @@ class SunlightMonitorService(private val context: Context) {
                 Settings.System.SCREEN_BRIGHTNESS,
             )
             if (result && currentBrightnessLevel == value) {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sunlight_monitor,
-                    msgResId = R.string.set_brightness,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.SET_BRIGHTNESS,
                     extra = brightnessLevel.toString(),
                 )
             } else {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sunlight_monitor,
-                    msgResId = R.string.set_brightness_fail,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.SET_BRIGHTNESS_FAIL,
                     extra = "$result | $value | $currentBrightnessLevel",
                 )
             }
         } catch (e: Exception) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sunlight_monitor,
-                msgResId = R.string.set_brightness_fail,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SUNLIGHT_MON,
+                logMessage = LogMessage.SET_BRIGHTNESS_FAIL,
                 exceptionMessage = e.message,
                 logType = Log.ERROR,
             )

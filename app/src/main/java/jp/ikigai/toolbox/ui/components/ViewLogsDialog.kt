@@ -13,32 +13,33 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.data.ServiceLog
-import jp.ikigai.toolbox.data.ToolboxServiceState
+import jp.ikigai.toolbox.data.AppModule
 
 @Composable
 fun ViewLogsDialog(
     dismiss: () -> Unit,
 ) {
-    val logs = remember { mutableStateListOf<ServiceLog>() }
-
-    LaunchedEffect(Unit) {
-        ToolboxServiceState.logs.collect { log ->
-            logs.add(0, log)
-        }
-    }
+    val logsState = AppModule.serviceLogDao.observeAll().collectAsState()
 
     AlertDialog(
         onDismissRequest = dismiss,
-        dismissButton = null,
+        dismissButton = {
+            Button(
+                onClick = {
+                    AppModule.serviceLogDao.deleteAll()
+                },
+            ) {
+                Text(
+                    text = stringResource(R.string.clear)
+                )
+            }
+        },
         confirmButton = {
             Button(
                 onClick = dismiss,
@@ -59,7 +60,7 @@ fun ViewLogsDialog(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 reverseLayout = true,
             ) {
-                if (logs.isEmpty()) {
+                if (logsState.value.isEmpty()) {
                     item {
                         Text(
                             text = stringResource(R.string.no_logs_found),
@@ -72,7 +73,7 @@ fun ViewLogsDialog(
                     }
                 }
                 items(
-                    items = logs,
+                    items = logsState.value,
                 ) { log ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),

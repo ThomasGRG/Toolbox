@@ -20,8 +20,9 @@ package jp.ikigai.toolbox.services
 import android.accessibilityservice.AccessibilityService
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.data.ToolboxServiceState
+import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.utils.startToolboxService
 
 class ToolboxAccessibilityService : AccessibilityService() {
@@ -29,9 +30,9 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.toolbox_accessibility_service,
-            msgResId = R.string.service_connected,
+        AppModule.serviceLogDao.insert(
+            serviceType = ServiceType.ACCESSIBILITY,
+            logMessage = LogMessage.CONNECTED,
         )
     }
 
@@ -42,17 +43,17 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         when (event?.keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.toolbox_accessibility_service,
-                    msgResId = R.string.volume_up_pressed,
+                AppModule.serviceLogDao.insert(
+                    serviceType = ServiceType.ACCESSIBILITY,
+                    logMessage = LogMessage.VOL_UP,
                 )
                 startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
                 return false
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.toolbox_accessibility_service,
-                    msgResId = R.string.volume_down_pressed,
+                AppModule.serviceLogDao.insert(
+                    serviceType = ServiceType.ACCESSIBILITY,
+                    logMessage = LogMessage.VOL_DOWN,
                 )
                 startToolboxService(SoundFixerService.ACTION_STOP_PLAYBACK)
                 return false

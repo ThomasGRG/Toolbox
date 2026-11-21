@@ -10,8 +10,11 @@ import android.net.Uri
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
-import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.utils.fileExists
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
-class SoundFixerService(private val context: Context) {
+class SoundFixerService(
+    private val context: Context,
+    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
+) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SOUND_FIXER"
         const val ACTION_STOP_PLAYBACK = "ACTION_STOP_PLAYBACK"
@@ -61,9 +67,9 @@ class SoundFixerService(private val context: Context) {
                     ToolboxPreferences.isSoundFixerEnabled(context)
                 ) {
                     ToolboxServiceState.updateSoundFixerState(true)
-                    ToolboxServiceState.log(
-                        serviceNameResId = R.string.sound_fixer,
-                        msgResId = R.string.monitor_running,
+                    serviceLogDao.insert(
+                        serviceType = ServiceType.SOUND_FIXER,
+                        logMessage = LogMessage.MON_RUNNING,
                     )
                     registerCallStateListener()
                 }
@@ -74,9 +80,9 @@ class SoundFixerService(private val context: Context) {
     fun onDestroy() {
         if (!ToolboxServiceState.soundFixerState.value) return
         ToolboxServiceState.updateSoundFixerState(false)
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.sound_fixer,
-            msgResId = R.string.monitor_stopped,
+        serviceLogDao.insert(
+            serviceType = ServiceType.SOUND_FIXER,
+            logMessage = LogMessage.MON_STOPPED,
         )
         ringing = false
         stopMusic()
@@ -87,9 +93,9 @@ class SoundFixerService(private val context: Context) {
             try {
                 telephonyManager.unregisterTelephonyCallback(it)
             } catch (e: Exception) {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sound_fixer,
-                    msgResId = R.string.caught_exception,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SOUND_FIXER,
+                    logMessage = LogMessage.CAUGHT_EXCEPTION,
                     exceptionMessage = e.message,
                     logType = Log.ERROR,
                 )
@@ -100,18 +106,18 @@ class SoundFixerService(private val context: Context) {
     private fun hasSelectedAudio(): Boolean {
         val ringtone = ToolboxPreferences.getSoundFixerRingtone(context)
         if (ringtone == null) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.ringtone_not_set,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.NO_RINGTONE,
                 logType = Log.WARN,
             )
             return false
         }
         val ringtoneExists = context.fileExists(ringtone)
         if (!ringtoneExists) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.file_not_exist,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.FILE_NOT_EXISTS,
                 logType = Log.WARN,
             )
         }
@@ -124,9 +130,9 @@ class SoundFixerService(private val context: Context) {
             override fun onCallStateChanged(state: Int) {
                 when (state) {
                     TelephonyManager.CALL_STATE_RINGING -> {
-                        ToolboxServiceState.log(
-                            serviceNameResId = R.string.sound_fixer,
-                            msgResId = R.string.incoming_call,
+                        serviceLogDao.insert(
+                            serviceType = ServiceType.SOUND_FIXER,
+                            logMessage = LogMessage.INCOMING_CALL,
                         )
                         ringing = true
                         evaluatePlayback()
@@ -134,9 +140,9 @@ class SoundFixerService(private val context: Context) {
 
                     TelephonyManager.CALL_STATE_OFFHOOK,
                     TelephonyManager.CALL_STATE_IDLE -> {
-                        ToolboxServiceState.log(
-                            serviceNameResId = R.string.sound_fixer,
-                            msgResId = R.string.call_idle_off_hook,
+                        serviceLogDao.insert(
+                            serviceType = ServiceType.SOUND_FIXER,
+                            logMessage = LogMessage.CALL_IDLE_OFF_HOOK,
                         )
                         ringing = false
                         stopMusic()
@@ -153,9 +159,9 @@ class SoundFixerService(private val context: Context) {
                 callback
             )
         } catch (e: SecurityException) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.caught_exception,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
                 logType = Log.ERROR,
             )
@@ -166,15 +172,15 @@ class SoundFixerService(private val context: Context) {
         val isRingModeVibrate = audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
         val isRingVolumeZero = audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0
         if (isRingModeVibrate) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.on_vibrate,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.ON_VIBRATE,
             )
         }
         if (isRingVolumeZero) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.ring_volume_zero,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.RING_VOL_ZERO,
             )
         }
         return isRingModeVibrate || isRingVolumeZero
@@ -184,15 +190,15 @@ class SoundFixerService(private val context: Context) {
         val isRingModeSilent = audioManager.ringerMode == AudioManager.RINGER_MODE_SILENT
         val isRingVolumeZero = audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0
         if (isRingModeSilent) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.on_silent,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.ON_SILENT,
             )
         }
         if (isRingVolumeZero) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.ring_volume_zero,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.RING_VOL_ZERO,
             )
         }
         return isRingModeSilent || isRingVolumeZero
@@ -203,16 +209,16 @@ class SoundFixerService(private val context: Context) {
             val isFilterAll = notificationManager.currentInterruptionFilter !=
                     NotificationManager.INTERRUPTION_FILTER_ALL
             if (isFilterAll) {
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sound_fixer,
-                    msgResId = R.string.dnd_on,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SOUND_FIXER,
+                    logMessage = LogMessage.DND_ON,
                 )
             }
             return isFilterAll
         } catch (e: Exception) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.caught_exception,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
                 logType = Log.ERROR,
             )
@@ -267,14 +273,14 @@ class SoundFixerService(private val context: Context) {
                 if (player === prepared && canPlay()) {
                     try {
                         prepared.start()
-                        ToolboxServiceState.log(
-                            serviceNameResId = R.string.sound_fixer,
-                            msgResId = R.string.player_start,
+                        serviceLogDao.insert(
+                            serviceType = ServiceType.SOUND_FIXER,
+                            logMessage = LogMessage.PLAYBACK_STARTED,
                         )
                     } catch (e: Exception) {
-                        ToolboxServiceState.log(
-                            serviceNameResId = R.string.sound_fixer,
-                            msgResId = R.string.caught_exception,
+                        serviceLogDao.insert(
+                            serviceType = ServiceType.SOUND_FIXER,
+                            logMessage = LogMessage.CAUGHT_EXCEPTION,
                             exceptionMessage = e.message,
                             logType = Log.ERROR,
                         )
@@ -286,9 +292,9 @@ class SoundFixerService(private val context: Context) {
             }
 
             mediaPlayer.setOnErrorListener { _, what, extra ->
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sound_fixer,
-                    msgResId = R.string.player_error,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SOUND_FIXER,
+                    logMessage = LogMessage.PLAYBACK_ERROR,
                     extra = "$what/$extra",
                     logType = Log.ERROR,
                 )
@@ -298,9 +304,9 @@ class SoundFixerService(private val context: Context) {
 
             mediaPlayer.prepareAsync()
         } catch (e: Exception) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.caught_exception,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
                 logType = Log.ERROR,
             )
@@ -318,15 +324,15 @@ class SoundFixerService(private val context: Context) {
                 it.setOnPreparedListener(null)
                 it.setOnErrorListener(null)
                 it.release()
-                ToolboxServiceState.log(
-                    serviceNameResId = R.string.sound_fixer,
-                    msgResId = R.string.player_released,
+                serviceLogDao.insert(
+                    serviceType = ServiceType.SOUND_FIXER,
+                    logMessage = LogMessage.PLAYER_RELEASED,
                 )
             }
         } catch (e: Exception) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sound_fixer,
-                msgResId = R.string.caught_exception,
+            serviceLogDao.insert(
+                serviceType = ServiceType.SOUND_FIXER,
+                logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
                 logType = Log.ERROR,
             )

@@ -4,7 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.receivers.AlarmReceiver
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -53,9 +54,9 @@ fun SunlightSchedule.setupAlarms(context: Context) {
         stopPendingIntent,
     )
 
-    ToolboxServiceState.log(
-        serviceNameResId = R.string.sunlight_monitor,
-        msgResId = R.string.setup_alarms,
+    AppModule.serviceLogDao.insert(
+        serviceType = ServiceType.SUNLIGHT_MON,
+        logMessage = LogMessage.ALARMS_SETUP,
     )
 }
 
@@ -96,17 +97,17 @@ fun SunlightSchedule.isTimeBetween(): Boolean {
 
     return if (start <= end) {
         if (now in start..end) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sunlight_monitor,
-                msgResId = R.string.time_is_between,
+            AppModule.serviceLogDao.insert(
+                serviceType = ServiceType.SUNLIGHT_MON,
+                logMessage = LogMessage.TIME_BETWEEN,
             )
             true
         } else false
     } else {
         if (now >= start || now <= end) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.sunlight_monitor,
-                msgResId = R.string.time_is_between,
+            AppModule.serviceLogDao.insert(
+                serviceType = ServiceType.SUNLIGHT_MON,
+                logMessage = LogMessage.TIME_BETWEEN,
             )
             true
         } else false

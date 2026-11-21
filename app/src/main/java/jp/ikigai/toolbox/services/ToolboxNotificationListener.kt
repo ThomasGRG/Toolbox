@@ -3,8 +3,10 @@ package jp.ikigai.toolbox.services
 import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.ToolboxServiceState
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import java.io.File
 
@@ -14,17 +16,17 @@ class ToolboxNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.toolbox_notification_listener,
-            msgResId = R.string.service_connected,
+        AppModule.serviceLogDao.insert(
+            serviceType = ServiceType.NOTIFICATION_LISTENER,
+            logMessage = LogMessage.CONNECTED,
         )
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.toolbox_notification_listener,
-            msgResId = R.string.service_disconnected,
+        AppModule.serviceLogDao.insert(
+            serviceType = ServiceType.NOTIFICATION_LISTENER,
+            logMessage = LogMessage.DISCONNECTED,
         )
         ongoingNotifications.clear()
     }
@@ -46,9 +48,9 @@ class ToolboxNotificationListener : NotificationListenerService() {
                 file.absolutePath
             )
         }
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.toolbox_notification_listener,
-            msgResId = R.string.notification_posted,
+        AppModule.serviceLogDao.insert(
+            serviceType = ServiceType.NOTIFICATION_LISTENER,
+            logMessage = LogMessage.NOTIFICATION_POSTED,
             extra = sbn.packageName,
         )
     }

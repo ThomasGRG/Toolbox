@@ -14,14 +14,20 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class ToolboxService : Service() {
+class ToolboxService(
+    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
+) : Service() {
 
     companion object {
         const val ACTION_STOP = "ACTION_STOP_TOOLBOX"
@@ -34,18 +40,18 @@ class ToolboxService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 Intent.ACTION_SCREEN_OFF -> {
-                    ToolboxServiceState.log(
-                        serviceNameResId = R.string.app_name,
-                        msgResId = R.string.screen_off
+                    serviceLogDao.insert(
+                        serviceType = ServiceType.TOOLBOX,
+                        logMessage = LogMessage.SCREEN_OFF,
                     )
                     netSpeedMonService.onStartCommand(intent)
                     sunlightMonitorService.onDestroy()
                 }
 
                 Intent.ACTION_SCREEN_ON -> {
-                    ToolboxServiceState.log(
-                        serviceNameResId = R.string.app_name,
-                        msgResId = R.string.screen_on
+                    serviceLogDao.insert(
+                        serviceType = ServiceType.TOOLBOX,
+                        logMessage = LogMessage.SCREEN_ON,
                     )
                     netSpeedMonService.onStartCommand(intent)
                     sunlightMonitorService.onStartCommand(null)
@@ -65,9 +71,9 @@ class ToolboxService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.app_name,
-            msgResId = R.string.service_created
+        serviceLogDao.insert(
+            serviceType = ServiceType.TOOLBOX,
+            logMessage = LogMessage.CREATED,
         )
         notificationManager = getSystemService(NotificationManager::class.java)
         appNotifierService = AppNotifierService(this)
@@ -104,9 +110,9 @@ class ToolboxService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.app_name,
-                msgResId = R.string.service_stopped
+            serviceLogDao.insert(
+                serviceType = ServiceType.TOOLBOX,
+                logMessage = LogMessage.STOPPED,
             )
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -125,9 +131,9 @@ class ToolboxService : Service() {
         startForegroundCompat()
         if (!ToolboxServiceState.toolboxState.value) {
             ToolboxServiceState.updateToolboxState(true)
-            ToolboxServiceState.log(
-                serviceNameResId = R.string.app_name,
-                msgResId = R.string.service_running
+            serviceLogDao.insert(
+                serviceType = ServiceType.TOOLBOX,
+                logMessage = LogMessage.RUNNING,
             )
         }
         appNotifierService.onStartCommand(intent)
@@ -205,9 +211,9 @@ class ToolboxService : Service() {
     override fun onDestroy() {
         runningServicesJob.cancel()
         ToolboxServiceState.updateToolboxState(false)
-        ToolboxServiceState.log(
-            serviceNameResId = R.string.app_name,
-            msgResId = R.string.service_destroyed
+        serviceLogDao.insert(
+            serviceType = ServiceType.TOOLBOX,
+            logMessage = LogMessage.DESTROYED,
         )
         appNotifierService.onDestroy()
         netSpeedMonService.onDestroy()
