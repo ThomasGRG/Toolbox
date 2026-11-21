@@ -76,6 +76,17 @@ object ToolboxServiceState {
     fun updateSunlightMonitorState(state: Boolean) {
         _sunlightMonitorState.update { state }
     }
+
+    private val _notificationSounds = MutableSharedFlow<String>(
+        replay = 0,
+        extraBufferCapacity = 6,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    val notificationSounds = _notificationSounds.asSharedFlow()
+
+    fun postNotificationSound(filePath: String) {
+        _notificationSounds.tryEmit(filePath)
+    }
 }
 
 data class ServiceLog(

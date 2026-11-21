@@ -2,6 +2,7 @@ package jp.ikigai.toolbox.utils
 
 import android.Manifest
 import android.app.AlarmManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,6 +13,7 @@ import android.text.TextUtils
 import androidx.core.net.toUri
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.services.ToolboxAccessibilityService
+import jp.ikigai.toolbox.services.ToolboxNotificationListener
 import jp.ikigai.toolbox.services.ToolboxService
 import java.io.File
 import java.io.FileOutputStream
@@ -94,6 +96,28 @@ fun Context.requestWriteSettings() {
     startActivity(intent)
 }
 
+val Context.hasNotificationListenerAccess: Boolean
+    get() {
+        val component = ComponentName(
+            this,
+            ToolboxNotificationListener::class.java
+        )
+
+        val enabledListeners = Settings.Secure.getString(
+            this.contentResolver,
+            "enabled_notification_listeners"
+        ) ?: return false
+
+        return enabledListeners.split(":").any {
+            ComponentName.unflattenFromString(it) == component
+        }
+    }
+
+fun Context.requestNotificationListenerAccess() {
+    val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+    startActivity(intent)
+}
+
 val Context.isAccessibilityServiceEnabled: Boolean
     get() {
         val expectedComponentName =
@@ -119,13 +143,13 @@ fun Context.requestAccessibilitySettings() {
     startActivity(intent)
 }
 
-fun Context.ringtoneExists(fileName: String): Boolean {
+fun Context.fileExists(fileName: String): Boolean {
     val file = File(filesDir, fileName)
     return file.exists() && file.length() > 0
 }
 
-fun Context.copyUriToInternalStorage(uri: Uri) {
-    val originalFileName = uri.getFileNameFromUri(contentResolver) ?: return
+fun Context.copyUriToInternalStorage(uri: Uri): String? {
+    val originalFileName = uri.getFileNameFromUri(contentResolver) ?: return null
 
     val destinationFile = File(filesDir, originalFileName)
 
@@ -135,8 +159,8 @@ fun Context.copyUriToInternalStorage(uri: Uri) {
                 inputStream.copyTo(outputStream)
             }
         }
-        ToolboxPreferences.setSoundFixerRingtone(this, originalFileName)
+        return originalFileName
     } catch (_: Exception) {
-        return
+        return null
     }
 }

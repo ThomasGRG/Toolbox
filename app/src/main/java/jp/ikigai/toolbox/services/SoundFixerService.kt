@@ -13,7 +13,10 @@ import android.util.Log
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
-import jp.ikigai.toolbox.utils.ringtoneExists
+import jp.ikigai.toolbox.utils.fileExists
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 class SoundFixerService(private val context: Context) {
@@ -29,6 +32,18 @@ class SoundFixerService(private val context: Context) {
     private val audioManager = context.getSystemService(AudioManager::class.java)
     private val telephonyManager = context.getSystemService(TelephonyManager::class.java)
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
+
+    private val soundPoolManager = SoundPoolManager()
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
+    private var notificationSoundsJob = coroutineScope.launch {
+        ToolboxServiceState.notificationSounds.collect {
+            if (canPlayNotification()) {
+                soundPoolManager.playNotification(it)
+            }
+        }
+    }
 
     fun onStartCommand(intent: Intent?) {
         when (intent?.action) {
@@ -66,6 +81,8 @@ class SoundFixerService(private val context: Context) {
         ringing = false
         stopMusic()
 
+        notificationSoundsJob.cancel()
+        soundPoolManager.releaseSoundPool()
         telephonyCallback?.let {
             try {
                 telephonyManager.unregisterTelephonyCallback(it)
@@ -90,7 +107,7 @@ class SoundFixerService(private val context: Context) {
             )
             return false
         }
-        val ringtoneExists = context.ringtoneExists(ringtone)
+        val ringtoneExists = context.fileExists(ringtone)
         if (!ringtoneExists) {
             ToolboxServiceState.log(
                 serviceNameResId = R.string.sound_fixer,
@@ -206,6 +223,13 @@ class SoundFixerService(private val context: Context) {
     private fun canPlay(): Boolean {
         return ringing &&
                 hasSelectedAudio() &&
+                !isDndOn() &&
+                !isOnSilent() &&
+                !isOnVibrate()
+    }
+
+    private fun canPlayNotification(): Boolean {
+        return !ringing &&
                 !isDndOn() &&
                 !isOnSilent() &&
                 !isOnVibrate()

@@ -64,14 +64,16 @@ import jp.ikigai.toolbox.utils.batteryOptimizationStatus
 import jp.ikigai.toolbox.utils.canScheduleExactAlarms
 import jp.ikigai.toolbox.utils.canWriteSettings
 import jp.ikigai.toolbox.utils.copyUriToInternalStorage
+import jp.ikigai.toolbox.utils.fileExists
+import jp.ikigai.toolbox.utils.hasNotificationListenerAccess
 import jp.ikigai.toolbox.utils.hasPostNotificationPerm
 import jp.ikigai.toolbox.utils.hasReadPhoneStatePerm
 import jp.ikigai.toolbox.utils.isAccessibilityServiceEnabled
 import jp.ikigai.toolbox.utils.requestAccessibilitySettings
 import jp.ikigai.toolbox.utils.requestBatteryUnrestricted
+import jp.ikigai.toolbox.utils.requestNotificationListenerAccess
 import jp.ikigai.toolbox.utils.requestScheduleExactAlarms
 import jp.ikigai.toolbox.utils.requestWriteSettings
-import jp.ikigai.toolbox.utils.ringtoneExists
 import jp.ikigai.toolbox.utils.startToolboxService
 import jp.ikigai.toolbox.utils.stopToolboxService
 import kotlinx.coroutines.Dispatchers
@@ -109,7 +111,24 @@ fun MainScreen() {
     val ringtoneExists by remember(key1 = soundFixerRingtone, key2 = context) {
         mutableStateOf(
             soundFixerRingtone?.let {
-                context.ringtoneExists(it)
+                context.fileExists(it)
+            } ?: false
+        )
+    }
+
+    var soundFixerGlobalNotificationSound by remember(key1 = context) {
+        mutableStateOf(
+            ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
+        )
+    }
+
+    val globalNotificationSoundExists by remember(
+        key1 = soundFixerGlobalNotificationSound,
+        key2 = context
+    ) {
+        mutableStateOf(
+            soundFixerGlobalNotificationSound?.let {
+                context.fileExists(it)
             } ?: false
         )
     }
@@ -118,13 +137,28 @@ fun MainScreen() {
         mutableStateOf(false)
     }
 
-    val audioPickerLauncher = rememberLauncherForActivityResult(
+    val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { selectedUri ->
             coroutineScope.launch(Dispatchers.IO) {
-                context.copyUriToInternalStorage(selectedUri)
-                soundFixerRingtone = ToolboxPreferences.getSoundFixerRingtone(context)
+                context.copyUriToInternalStorage(selectedUri)?.let {
+                    ToolboxPreferences.setSoundFixerRingtone(context, it)
+                    soundFixerRingtone = it
+                }
+            }
+        }
+    }
+
+    val globalNotificationSoundPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            coroutineScope.launch(Dispatchers.IO) {
+                context.copyUriToInternalStorage(selectedUri)?.let {
+                    ToolboxPreferences.setSoundFixerGlobalNotificationSound(context, it)
+                    soundFixerGlobalNotificationSound = it
+                }
             }
         }
     }
@@ -138,6 +172,12 @@ fun MainScreen() {
     var canWriteSettings by remember(key1 = context) {
         mutableStateOf(
             context.canWriteSettings
+        )
+    }
+
+    var hasNotificationListenerAccess by remember(key1 = context) {
+        mutableStateOf(
+            context.hasNotificationListenerAccess
         )
     }
 
@@ -177,6 +217,7 @@ fun MainScreen() {
         hasReadPhoneStatePermission = context.hasReadPhoneStatePerm
         canWriteSettings = context.canWriteSettings
         canScheduleExactAlarms = context.canScheduleExactAlarms
+        hasNotificationListenerAccess = context.hasNotificationListenerAccess
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -200,11 +241,14 @@ fun MainScreen() {
             dismiss = {
                 showSoundFixerSettingsDialog = false
             },
-            canStart = hasNotificationPermission && hasReadPhoneStatePermission,
+            canStart = hasNotificationPermission && hasReadPhoneStatePermission && hasNotificationListenerAccess,
             isRunning = soundFixerState,
-            selectedFileName = soundFixerRingtone,
+            selectedRingtone = soundFixerRingtone,
             ringtoneExists = ringtoneExists,
-            audioPickerLauncher = audioPickerLauncher,
+            ringtonePickerLauncher = ringtonePickerLauncher,
+            selectedGlobalNotificationSound = soundFixerGlobalNotificationSound,
+            globalNotificationSoundExists = globalNotificationSoundExists,
+            globalNotificationSoundPickerLauncher = globalNotificationSoundPickerLauncher,
         )
     }
 
@@ -336,6 +380,14 @@ fun MainScreen() {
                 }
             )
             Spacer(modifier = Modifier.height(10.dp))
+            PermissionCard(
+                permissionName = stringResource(R.string.notification_read_access),
+                granted = hasNotificationListenerAccess,
+                grant = {
+                    context.requestNotificationListenerAccess()
+                }
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = stringResource(R.string.services),
                 modifier = Modifier.fillMaxWidth(),
@@ -395,11 +447,12 @@ fun MainScreen() {
                 permissionList = listOf(
                     stringResource(R.string.post_notification),
                     stringResource(R.string.read_phone_state),
+                    stringResource(R.string.notification_read_access),
                 ),
-                canStart = hasNotificationPermission && hasReadPhoneStatePermission,
+                canStart = hasNotificationPermission && hasReadPhoneStatePermission && hasNotificationListenerAccess,
                 isRunning = soundFixerState,
                 startService = {
-                    if (ringtoneExists) {
+                    if (ringtoneExists && globalNotificationSoundExists) {
                         ToolboxPreferences.setToolboxEnabled(context, true)
                         ToolboxPreferences.setSoundFixerEnabled(context, true)
                         context.startToolboxService()

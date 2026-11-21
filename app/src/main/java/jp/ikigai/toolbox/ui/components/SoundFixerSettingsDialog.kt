@@ -24,9 +24,12 @@ fun SoundFixerSettingsDialog(
     dismiss: () -> Unit,
     canStart: Boolean,
     isRunning: Boolean,
-    selectedFileName: String?,
+    selectedRingtone: String?,
     ringtoneExists: Boolean,
-    audioPickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    ringtonePickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    selectedGlobalNotificationSound: String?,
+    globalNotificationSoundExists: Boolean,
+    globalNotificationSoundPickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
 ) {
     val context = LocalContext.current
 
@@ -49,7 +52,7 @@ fun SoundFixerSettingsDialog(
                     context.startToolboxService()
                     dismiss()
                 },
-                enabled = canStart && ringtoneExists && !isRunning,
+                enabled = canStart && ringtoneExists && globalNotificationSoundExists && !isRunning,
             ) {
                 Text(
                     text = stringResource(
@@ -68,13 +71,13 @@ fun SoundFixerSettingsDialog(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = selectedFileName ?: stringResource(R.string.no_ringtone_selected),
+                    text = selectedRingtone ?: stringResource(R.string.no_ringtone_selected),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
                     onClick = {
-                        audioPickerLauncher.launch(
+                        ringtonePickerLauncher.launch(
                             arrayOf("audio/*")
                         )
                     },
@@ -82,6 +85,24 @@ fun SoundFixerSettingsDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.select_ringtone)
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = selectedGlobalNotificationSound ?: stringResource(R.string.no_global_notification_sound_selected),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = {
+                        globalNotificationSoundPickerLauncher.launch(
+                            arrayOf("audio/*")
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.select_global_notification_sound)
                     )
                 }
             }

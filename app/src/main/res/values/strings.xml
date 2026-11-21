@@ -24,12 +24,14 @@
     <string name="app_notifier">App Notifier</string>
     <string name="app_notifier_desc">Get notifications for app installs and updates</string>
     <string name="toolbox_accessibility_service">Toolbox accessibility service</string>
+    <string name="toolbox_notification_listener">Toolbox notification listener</string>
 
     <string name="post_notification">Post notifications</string>
     <string name="read_phone_state">Read phone state</string>
     <string name="battery_optimization">Exempt from battery optimization</string>
     <string name="write_settings">Write system settings</string>
     <string name="schedule_exact_alarms">Schedule exact alarms</string>
+    <string name="notification_read_access">Notification read access</string>
     <string name="accessibility_service">Accessibility service</string>
     <string name="accessibility_service_desc">This widget requires accessibility service to be enabled</string>
 
@@ -38,6 +40,8 @@
 
     <string name="select_ringtone">Select ringtone</string>
     <string name="no_ringtone_selected">No ringtone selected</string>
+    <string name="select_global_notification_sound">Select global notification sound</string>
+    <string name="no_global_notification_sound_selected">No global notification sound selected</string>
     <string name="running">Running</string>
 
     <string name="tile_added">Tile added</string>
@@ -110,6 +114,8 @@
 
     <string name="caught_exception">Caught exception</string>
 
+    <string name="notification_posted">Notification posted</string>
+
     <string name="setup_alarms">Alarms set up</string>
     <string name="time_is_between">Current time between schedule</string>
     <string name="alarm_received">Received alarm</string>
@@ -143,6 +149,7 @@
     <string name="replay_updates">Replay app update notifications</string>
 
     <string name="service_connected">Service connected</string>
+    <string name="service_disconnected">Service disconnected</string>
     <string name="service_created">Service created</string>
     <string name="service_destroyed">Service destroyed</string>
     <string name="service_running">Service is running</string>

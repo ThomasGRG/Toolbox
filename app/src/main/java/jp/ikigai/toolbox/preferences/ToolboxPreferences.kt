@@ -30,6 +30,7 @@ object ToolboxPreferences {
     // SoundFixer Pref Keys
     private const val SOUND_FIXER_ENABLED = "sound_fixer_enabled"
     private const val SOUND_FIXER_RINGTONE = "sound_fixer_ringtone"
+    private const val SOUND_FIXER_GLOBAL_NOTIFICATION_SOUND = "sound_fixer_global_notification_sound"
 
     // AppNotifier Pref Keys
     private const val APP_NOTIFIER_ENABLED = "app_notifier_enabled"
@@ -104,6 +105,16 @@ object ToolboxPreferences {
     fun getSoundFixerRingtone(context: Context): String? {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getString(SOUND_FIXER_RINGTONE, null)
+    }
+
+    fun setSoundFixerGlobalNotificationSound(context: Context, fileName: String) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putString(SOUND_FIXER_GLOBAL_NOTIFICATION_SOUND, fileName) }
+    }
+
+    fun getSoundFixerGlobalNotificationSound(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(SOUND_FIXER_GLOBAL_NOTIFICATION_SOUND, null)
     }
 
     fun setSunlightMonEnabled(context: Context, enabled: Boolean) {
