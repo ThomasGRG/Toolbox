@@ -1,7 +1,9 @@
-package jp.ikigai.toolbox.data
+package jp.ikigai.toolbox.dao
 
 import android.content.ContentValues
 import androidx.core.database.getStringOrNull
+import jp.ikigai.toolbox.data.AppUpdateInfo
+import jp.ikigai.toolbox.data.Database
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

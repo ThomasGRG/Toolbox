@@ -1,7 +1,9 @@
-package jp.ikigai.toolbox.data
+package jp.ikigai.toolbox.dao
 
 import android.content.ContentValues
 import android.util.Log
+import jp.ikigai.toolbox.data.Database
+import jp.ikigai.toolbox.data.ServiceLog
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import kotlinx.coroutines.CoroutineScope

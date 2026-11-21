@@ -9,7 +9,7 @@ import android.hardware.SensorManager
 import android.provider.Settings
 import android.util.Log
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.ServiceLogDao
+import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.data.isTimeBetween
 import jp.ikigai.toolbox.enums.LogMessage

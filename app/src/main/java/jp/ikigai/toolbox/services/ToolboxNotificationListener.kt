@@ -7,8 +7,6 @@ import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
-import jp.ikigai.toolbox.preferences.ToolboxPreferences
-import java.io.File
 
 class ToolboxNotificationListener : NotificationListenerService() {
 
@@ -42,12 +40,9 @@ class ToolboxNotificationListener : NotificationListenerService() {
             if (ongoingNotifications.contains(key)) return
             ongoingNotifications.add(key)
         }
-        ToolboxPreferences.getSoundFixerGlobalNotificationSound(this)?.let {
-            val file = File(filesDir, it)
-            ToolboxServiceState.postNotificationSound(
-                file.absolutePath
-            )
-        }
+        ToolboxServiceState.postNotificationSound(
+            sbn.packageName
+        )
         AppModule.serviceLogDao.insert(
             serviceType = ServiceType.NOTIFICATION_LISTENER,
             logMessage = LogMessage.NOTIFICATION_POSTED,

@@ -21,7 +21,7 @@ import androidx.core.graphics.drawable.IconCompat
 import jp.ikigai.toolbox.MainActivity
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.ServiceLogDao
+import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType

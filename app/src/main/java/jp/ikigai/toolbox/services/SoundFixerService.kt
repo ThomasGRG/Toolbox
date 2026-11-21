@@ -10,8 +10,9 @@ import android.net.Uri
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
+import jp.ikigai.toolbox.dao.AppSoundConfigDao
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.ServiceLogDao
+import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
@@ -25,6 +26,7 @@ import java.io.File
 class SoundFixerService(
     private val context: Context,
     private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
+    private val appSoundConfigDao: AppSoundConfigDao = AppModule.appSoundConfigDao,
 ) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SOUND_FIXER"
@@ -43,10 +45,24 @@ class SoundFixerService(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+    private var appSoundConfigMap = emptyMap<String, String>()
+    private var perAppConfigsJob = coroutineScope.launch {
+        appSoundConfigDao.observeAll().collect { configList ->
+            appSoundConfigMap = configList.associate { it.packageName to it.fileName }
+        }
+    }
+
     private var notificationSoundsJob = coroutineScope.launch {
-        ToolboxServiceState.notificationSounds.collect {
+        ToolboxServiceState.notificationSounds.collect { packageName ->
             if (canPlayNotification()) {
-                soundPoolManager.playNotification(it)
+                appSoundConfigMap.getOrDefault(
+                    packageName,
+                    ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
+                )?.let {
+                    soundPoolManager.playNotification(
+                        File(context.filesDir, it).absolutePath
+                    )
+                }
             }
         }
     }
@@ -88,6 +104,7 @@ class SoundFixerService(
         stopMusic()
 
         notificationSoundsJob.cancel()
+        perAppConfigsJob.cancel()
         soundPoolManager.releaseSoundPool()
         telephonyCallback?.let {
             try {

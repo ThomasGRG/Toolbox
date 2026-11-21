@@ -5,12 +5,18 @@ import android.app.AlarmManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
+import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
+import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.enums.LogMessage
+import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.services.ToolboxAccessibilityService
 import jp.ikigai.toolbox.services.ToolboxNotificationListener
@@ -162,5 +168,32 @@ fun Context.copyUriToInternalStorage(uri: Uri): String? {
         return originalFileName
     } catch (_: Exception) {
         return null
+    }
+}
+
+fun Context.getAvailableSounds(): List<String> {
+    return filesDir
+        .listFiles()
+        ?.filter {
+            if (!it.isFile || it.length() > 1048576) return@filter false
+            val mimeType = MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(it.extension.lowercase())
+            mimeType?.startsWith("audio/") == true
+        }
+        ?.map { it.name }
+        ?: emptyList()
+}
+
+fun Context.getPackageInfoSafely(packageName: String, serviceType: ServiceType): PackageInfo? {
+    return try {
+        packageManager.getPackageInfo(packageName, 0)
+    } catch (e: PackageManager.NameNotFoundException) {
+        AppModule.serviceLogDao.insert(
+            serviceType = serviceType,
+            logMessage = LogMessage.CAUGHT_EXCEPTION,
+            exceptionMessage = e.message,
+            logType = Log.ERROR,
+        )
+        null
     }
 }

@@ -27,6 +27,9 @@ class Database(context: Context) : SQLiteOpenHelper(
         db.execSQL(
             ServiceLog.CREATE_TABLE_QUERY
         )
+        db.execSQL(
+            AppSoundConfig.CREATE_TABLE_QUERY
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {

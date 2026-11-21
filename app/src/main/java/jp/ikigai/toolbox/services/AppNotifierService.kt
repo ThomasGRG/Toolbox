@@ -8,28 +8,27 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 import jp.ikigai.toolbox.BuildConfig
 import jp.ikigai.toolbox.R
+import jp.ikigai.toolbox.dao.AppUpdateInfoDao
+import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.AppUpdateInfo
-import jp.ikigai.toolbox.data.AppUpdateInfoDao
-import jp.ikigai.toolbox.data.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.receivers.InstallNotificationDismissedReceiver
 import jp.ikigai.toolbox.receivers.UpdateNotificationDismissedReceiver
+import jp.ikigai.toolbox.utils.getPackageInfoSafely
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -191,20 +190,13 @@ class AppNotifierService(
     }
 
     private fun getPackageInfoSafely(packageName: String): PackageInfo? {
-        return try {
-            context.packageManager.getPackageInfo(packageName, 0)
-        } catch (e: PackageManager.NameNotFoundException) {
-            serviceLogDao.insert(
-                serviceType = ServiceType.APP_NOTIFIER,
-                logMessage = LogMessage.CAUGHT_EXCEPTION,
-                exceptionMessage = e.message,
-                logType = Log.ERROR,
-            )
-            appUpdateInfoDao.apply {
-                deleteInstall(packageName)
-                deleteUpdate(packageName)
+        return context.getPackageInfoSafely(packageName, ServiceType.APP_NOTIFIER).also {
+            if (it == null) {
+                appUpdateInfoDao.apply {
+                    deleteInstall(packageName)
+                    deleteUpdate(packageName)
+                }
             }
-            null
         }
     }
 

@@ -15,7 +15,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.ServiceLogDao
+import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType

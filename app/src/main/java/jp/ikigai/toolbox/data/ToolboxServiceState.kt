@@ -50,7 +50,7 @@ object ToolboxServiceState {
     )
     val notificationSounds = _notificationSounds.asSharedFlow()
 
-    fun postNotificationSound(filePath: String) {
-        _notificationSounds.tryEmit(filePath)
+    fun postNotificationSound(packageName: String) {
+        _notificationSounds.tryEmit(packageName)
     }
 }
