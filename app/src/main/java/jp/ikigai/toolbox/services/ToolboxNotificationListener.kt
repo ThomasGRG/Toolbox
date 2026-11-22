@@ -10,8 +10,6 @@ import jp.ikigai.toolbox.enums.ServiceType
 
 class ToolboxNotificationListener : NotificationListenerService() {
 
-    private val ongoingNotifications = mutableSetOf<String>()
-
     override fun onListenerConnected() {
         super.onListenerConnected()
         AppModule.serviceLogDao.insert(
@@ -26,7 +24,6 @@ class ToolboxNotificationListener : NotificationListenerService() {
             serviceType = ServiceType.NOTIFICATION_LISTENER,
             logMessage = LogMessage.DISCONNECTED,
         )
-        ongoingNotifications.clear()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -35,11 +32,6 @@ class ToolboxNotificationListener : NotificationListenerService() {
             isGroupSummaryNotification(sbn) ||
             isMediaNotification(sbn)
         ) return
-        if (sbn.isOngoing) {
-            val key = getOngoingNotificationKey(sbn)
-            if (ongoingNotifications.contains(key)) return
-            ongoingNotifications.add(key)
-        }
         ToolboxServiceState.postNotificationSound(
             sbn.packageName
         )
@@ -48,17 +40,6 @@ class ToolboxNotificationListener : NotificationListenerService() {
             logMessage = LogMessage.NOTIFICATION_POSTED,
             extra = sbn.packageName,
         )
-    }
-
-    override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-        if (sbn == null) return
-        ongoingNotifications.remove(
-            getOngoingNotificationKey(sbn)
-        )
-    }
-
-    private fun getOngoingNotificationKey(sbn: StatusBarNotification): String {
-        return "${sbn.packageName}-${sbn.id}"
     }
 
     private fun isGroupSummaryNotification(sbn: StatusBarNotification): Boolean {
