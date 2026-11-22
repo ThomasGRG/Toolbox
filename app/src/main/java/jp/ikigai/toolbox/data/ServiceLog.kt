@@ -33,7 +33,7 @@ data class ServiceLog(
         """.trimIndent()
 
         val GET_ALL = """
-            SELECT $SERVICE_ID, $MESSAGE_ID, $EXTRA, $EXCEPTION_MESSAGE, $DATE_TIME, $LOG_TYPE FROM $TABLE
+            SELECT $SERVICE_ID, $MESSAGE_ID, $EXTRA, $EXCEPTION_MESSAGE, $DATE_TIME, $LOG_TYPE FROM $TABLE ORDER BY $DATE_TIME DESC
         """.trimIndent()
     }
 }
