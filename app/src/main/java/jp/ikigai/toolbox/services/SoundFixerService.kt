@@ -20,6 +20,7 @@ import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.utils.fileExists
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -46,26 +47,8 @@ class SoundFixerService(
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var appSoundConfigMap = emptyMap<String, String>()
-    private var perAppConfigsJob = coroutineScope.launch {
-        appSoundConfigDao.observeAll().collect { configList ->
-            appSoundConfigMap = configList.associate { it.packageName to it.fileName }
-        }
-    }
-
-    private var notificationSoundsJob = coroutineScope.launch {
-        ToolboxServiceState.notificationSounds.collect { packageName ->
-            if (canPlayNotification()) {
-                appSoundConfigMap.getOrDefault(
-                    packageName,
-                    ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
-                )?.let {
-                    soundPoolManager?.playNotification(
-                        File(context.filesDir, it).absolutePath
-                    )
-                }
-            }
-        }
-    }
+    private var perAppConfigsJob: Job? = null
+    private var notificationSoundsJob: Job? = null
 
     fun onStartCommand(intent: Intent?) {
         when (intent?.action) {
@@ -87,6 +70,7 @@ class SoundFixerService(
                         serviceType = ServiceType.SOUND_FIXER,
                         logMessage = LogMessage.MON_RUNNING,
                     )
+                    initJobs()
                     soundPoolManager = SoundPoolManager()
                     registerCallStateListener()
                 }
@@ -104,8 +88,8 @@ class SoundFixerService(
         ringing = false
         stopMusic()
 
-        notificationSoundsJob.cancel()
-        perAppConfigsJob.cancel()
+        notificationSoundsJob?.cancel()
+        perAppConfigsJob?.cancel()
 
         soundPoolManager?.releaseSoundPool()
         soundPoolManager = null
@@ -120,6 +104,28 @@ class SoundFixerService(
                     exceptionMessage = e.message,
                     logType = Log.ERROR,
                 )
+            }
+        }
+    }
+
+    private fun initJobs() {
+        perAppConfigsJob = coroutineScope.launch {
+            appSoundConfigDao.observeAll().collect { configList ->
+                appSoundConfigMap = configList.associate { it.packageName to it.fileName }
+            }
+        }
+        notificationSoundsJob = coroutineScope.launch {
+            ToolboxServiceState.notificationSounds.collect { packageName ->
+                if (canPlayNotification()) {
+                    appSoundConfigMap.getOrDefault(
+                        packageName,
+                        ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
+                    )?.let {
+                        soundPoolManager?.playNotification(
+                            File(context.filesDir, it).absolutePath
+                        )
+                    }
+                }
             }
         }
     }
