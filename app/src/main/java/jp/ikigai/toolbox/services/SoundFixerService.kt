@@ -41,7 +41,7 @@ class SoundFixerService(
     private val telephonyManager = context.getSystemService(TelephonyManager::class.java)
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
-    private val soundPoolManager = SoundPoolManager()
+    private var soundPoolManager: SoundPoolManager? = null
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -59,7 +59,7 @@ class SoundFixerService(
                     packageName,
                     ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
                 )?.let {
-                    soundPoolManager.playNotification(
+                    soundPoolManager?.playNotification(
                         File(context.filesDir, it).absolutePath
                     )
                 }
@@ -87,6 +87,7 @@ class SoundFixerService(
                         serviceType = ServiceType.SOUND_FIXER,
                         logMessage = LogMessage.MON_RUNNING,
                     )
+                    soundPoolManager = SoundPoolManager()
                     registerCallStateListener()
                 }
             }
@@ -105,7 +106,10 @@ class SoundFixerService(
 
         notificationSoundsJob.cancel()
         perAppConfigsJob.cancel()
-        soundPoolManager.releaseSoundPool()
+
+        soundPoolManager?.releaseSoundPool()
+        soundPoolManager = null
+
         telephonyCallback?.let {
             try {
                 telephonyManager.unregisterTelephonyCallback(it)
