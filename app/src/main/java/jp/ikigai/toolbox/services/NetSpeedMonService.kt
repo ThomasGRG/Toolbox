@@ -37,8 +37,8 @@ class NetSpeedMonService(
         const val NOTIFICATION_ID = 16249
     }
 
-    private val handlerThread = HandlerThread("NetSpeedMon").apply { start() }
-    private val handler = Handler(handlerThread.looper)
+    private var handlerThread: HandlerThread? = null
+    private var handler: Handler? = null
 
     private var previousRxBytes: Long = 0
     private var previousTxBytes: Long = 0
@@ -89,7 +89,13 @@ class NetSpeedMonService(
         previousTxBytes = TrafficStats.getTotalTxBytes()
         sessionStartRxBytes = TrafficStats.getTotalRxBytes()
         sessionStartTxBytes = TrafficStats.getTotalTxBytes()
-        handler.postDelayed(calcSpeedRunnable, intervalMs)
+
+        handlerThread = HandlerThread("NetSpeedMon").apply {
+            start()
+            handler = Handler(this.looper)
+            handler?.postDelayed(calcSpeedRunnable, intervalMs)
+        }
+
         ToolboxServiceState.updateNetSpeedMonState(true)
         serviceLogDao.insert(
             serviceType = ServiceType.NET_SPEED_MON,
@@ -99,8 +105,7 @@ class NetSpeedMonService(
 
     private fun pauseMon() {
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || !ToolboxServiceState.netSpeedMonState.value) return
-        handler.removeCallbacks(calcSpeedRunnable)
-        notificationManager.cancel(NOTIFICATION_ID)
+        handler?.removeCallbacks(calcSpeedRunnable)
         serviceLogDao.insert(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_PAUSED,
@@ -111,7 +116,7 @@ class NetSpeedMonService(
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || !ToolboxServiceState.netSpeedMonState.value) return
         previousRxBytes = TrafficStats.getTotalRxBytes()
         previousTxBytes = TrafficStats.getTotalTxBytes()
-        handler.postDelayed(calcSpeedRunnable, intervalMs)
+        handler?.postDelayed(calcSpeedRunnable, intervalMs)
         serviceLogDao.insert(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_RUNNING,
@@ -122,8 +127,10 @@ class NetSpeedMonService(
         sessionStartRxBytes = 0
         sessionStartTxBytes = 0
 
-        handler.removeCallbacks(calcSpeedRunnable)
-        handlerThread.quitSafely()
+        handler?.removeCallbacks(calcSpeedRunnable)
+        handler = null
+        handlerThread?.quitSafely()
+        handlerThread = null
 
         notificationManager.cancel(NOTIFICATION_ID)
 
@@ -156,7 +163,7 @@ class NetSpeedMonService(
             previousRxBytes = currentRxBytes
             previousTxBytes = currentTxBytes
 
-            handler.postDelayed(this, intervalMs)
+            handler?.postDelayed(this, intervalMs)
         }
     }
 
