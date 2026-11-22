@@ -80,9 +80,9 @@ class AppNotifierService(
                     handleAppUpdateNotification(packageInfo)
                 else {
                     handleAppInstallNotification(packageInfo)
-                }
-                packageInfo.versionName?.let { versionName ->
-                    packageNameVersionNameMap[packageName] = versionName
+                    packageInfo.versionName?.let { versionName ->
+                        packageNameVersionNameMap[packageName] = versionName
+                    }
                 }
             }
         }
@@ -180,13 +180,11 @@ class AppNotifierService(
                 ToolboxPreferences.getVersionName(context)?.let { versionName ->
                     packageNameVersionNameMap[it.packageName] = versionName
                 }
-                handleAppUpdateNotification(it)
-                packageNameVersionNameMap.clear()
+                handleAppUpdateNotification(it, true)
             }
             replayAppUpdates()
             replayAppInstalls()
         }
-        start()
     }
 
     private fun getPackageInfoSafely(packageName: String): PackageInfo? {
@@ -200,7 +198,7 @@ class AppNotifierService(
         }
     }
 
-    private fun handleAppUpdateNotification(pkgInfo: PackageInfo) {
+    private fun handleAppUpdateNotification(pkgInfo: PackageInfo, isUpgrade: Boolean = false) {
         coroutineScope.launch {
             val info = AppUpdateInfo(
                 packageName = pkgInfo.packageName,
@@ -210,6 +208,15 @@ class AppNotifierService(
                 prevVersion = packageNameVersionNameMap[pkgInfo.packageName],
                 isInstall = false
             )
+
+            if (isUpgrade) {
+                packageNameVersionNameMap.clear()
+                start()
+            } else {
+                pkgInfo.versionName?.let { versionName ->
+                    packageNameVersionNameMap[pkgInfo.packageName] = versionName
+                }
+            }
 
             val list: List<AppUpdateInfo>
 
