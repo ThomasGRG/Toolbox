@@ -48,7 +48,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.ToolboxServiceState
-import jp.ikigai.toolbox.data.isTimeBetween
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.services.AppNotifierService
 import jp.ikigai.toolbox.services.NetSpeedMonService

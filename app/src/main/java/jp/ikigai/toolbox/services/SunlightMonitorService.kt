@@ -11,7 +11,6 @@ import android.util.Log
 import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
-import jp.ikigai.toolbox.data.isTimeBetween
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences

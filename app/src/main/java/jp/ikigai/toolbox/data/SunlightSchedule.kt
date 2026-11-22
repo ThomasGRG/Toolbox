@@ -1,12 +1,7 @@
 package jp.ikigai.toolbox.data
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
-import jp.ikigai.toolbox.receivers.AlarmReceiver
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
@@ -16,100 +11,58 @@ data class SunlightSchedule(
     val startMinute: Int,
     val endHour: Int,
     val endMinute: Int
-)
+) {
+    fun getTimeRangeMillis(): Pair<Long, Long> {
+        val now = LocalDateTime.now()
+        val startTime = LocalTime.of(startHour, startMinute)
+        val endTime = LocalTime.of(endHour, endMinute)
 
-fun SunlightSchedule.setupAlarms(context: Context) {
-    val alarmManager = context.getSystemService(AlarmManager::class.java)
-    if (!alarmManager.canScheduleExactAlarms()) return
+        var startDate = now.toLocalDate()
 
-    val startIntent = Intent(context, AlarmReceiver::class.java)
-    val startPendingIntent = PendingIntent.getBroadcast(
-        context,
-        92160,
-        startIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
+        var start = startDate.atTime(startTime)
+        if (start <= now) {
+            startDate = startDate.plusDays(1)
+            start = startDate.atTime(startTime)
+        }
 
-    val stopIntent = Intent(context, AlarmReceiver::class.java)
-    val stopPendingIntent = PendingIntent.getBroadcast(
-        context,
-        36848,
-        stopIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
+        val endDate = if (endTime <= startTime) {
+            startDate.plusDays(1)
+        } else {
+            startDate
+        }
 
-    alarmManager.cancel(startPendingIntent)
-    alarmManager.cancel(stopPendingIntent)
+        val end = endDate.atTime(endTime)
 
-    val (startMillis, endMillis) = getTimeRangeMillis()
+        val zone = ZoneId.systemDefault()
 
-    alarmManager.set(
-        AlarmManager.RTC_WAKEUP,
-        startMillis,
-        startPendingIntent,
-    )
-    alarmManager.setExact(
-        AlarmManager.RTC_WAKEUP,
-        endMillis,
-        stopPendingIntent,
-    )
-
-    AppModule.serviceLogDao.insert(
-        serviceType = ServiceType.SUNLIGHT_MON,
-        logMessage = LogMessage.ALARMS_SETUP,
-    )
-}
-
-fun SunlightSchedule.getTimeRangeMillis(): Pair<Long, Long> {
-    val now = LocalDateTime.now()
-    val startTime = LocalTime.of(startHour, startMinute)
-    val endTime = LocalTime.of(endHour, endMinute)
-
-    var startDate = now.toLocalDate()
-
-    var start = startDate.atTime(startTime)
-    if (start <= now) {
-        startDate = startDate.plusDays(1)
-        start = startDate.atTime(startTime)
+        return Pair(
+            start.atZone(zone).toInstant().toEpochMilli(),
+            end.atZone(zone).toInstant().toEpochMilli()
+        )
     }
 
-    val endDate = if (endTime <= startTime) {
-        startDate.plusDays(1)
-    } else {
-        startDate
-    }
+    fun isTimeBetween(): Boolean {
+        val now = LocalTime.now()
 
-    val end = endDate.atTime(endTime)
+        val start = LocalTime.of(startHour, startMinute)
+        val end = LocalTime.of(endHour, endMinute)
 
-    val zone = ZoneId.systemDefault()
-
-    return Pair(
-        start.atZone(zone).toInstant().toEpochMilli(),
-        end.atZone(zone).toInstant().toEpochMilli()
-    )
-}
-
-fun SunlightSchedule.isTimeBetween(): Boolean {
-    val now = LocalTime.now()
-
-    val start = LocalTime.of(startHour, startMinute)
-    val end = LocalTime.of(endHour, endMinute)
-
-    return if (start <= end) {
-        if (now in start..end) {
-            AppModule.serviceLogDao.insert(
-                serviceType = ServiceType.SUNLIGHT_MON,
-                logMessage = LogMessage.TIME_BETWEEN,
-            )
-            true
-        } else false
-    } else {
-        if (now >= start || now <= end) {
-            AppModule.serviceLogDao.insert(
-                serviceType = ServiceType.SUNLIGHT_MON,
-                logMessage = LogMessage.TIME_BETWEEN,
-            )
-            true
-        } else false
+        return if (start <= end) {
+            if (now in start..end) {
+                AppModule.serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.TIME_BETWEEN,
+                )
+                true
+            } else false
+        } else {
+            if (now >= start || now <= end) {
+                AppModule.serviceLogDao.insert(
+                    serviceType = ServiceType.SUNLIGHT_MON,
+                    logMessage = LogMessage.TIME_BETWEEN,
+                )
+                true
+            } else false
+        }
     }
 }

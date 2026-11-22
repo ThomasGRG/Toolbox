@@ -3,7 +3,7 @@ package jp.ikigai.toolbox.preferences
 import android.content.Context
 import androidx.core.content.edit
 import jp.ikigai.toolbox.data.SunlightSchedule
-import jp.ikigai.toolbox.data.setupAlarms
+import jp.ikigai.toolbox.utils.setupSunlightSchedule
 
 object ToolboxPreferences {
     private const val PREF_NAME = "ToolboxPrefs"
@@ -80,7 +80,7 @@ object ToolboxPreferences {
             putInt(SUNLIGHT_END_HOUR, sunlightSchedule.endHour)
             putInt(SUNLIGHT_END_MINUTE, sunlightSchedule.endMinute)
         }
-        sunlightSchedule.setupAlarms(context)
+        context.setupSunlightSchedule(sunlightSchedule)
     }
 
     fun getSunlightSchedule(context: Context): SunlightSchedule {

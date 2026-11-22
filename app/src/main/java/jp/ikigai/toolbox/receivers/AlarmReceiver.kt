@@ -4,12 +4,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.isTimeBetween
-import jp.ikigai.toolbox.data.setupAlarms
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.services.SunlightMonitorService
+import jp.ikigai.toolbox.utils.setupSunlightSchedule
 import jp.ikigai.toolbox.utils.startToolboxService
 import jp.ikigai.toolbox.utils.stopToolboxService
 
@@ -25,7 +24,7 @@ class AlarmReceiver : BroadcastReceiver() {
             context.startToolboxService()
         } else {
             context.stopToolboxService(SunlightMonitorService.ACTION_STOP)
-            sunlightSchedule.setupAlarms(context)
+            context.setupSunlightSchedule(sunlightSchedule)
         }
     }
 }

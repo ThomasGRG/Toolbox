@@ -4,11 +4,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.setupAlarms
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.utils.canScheduleExactAlarms
+import jp.ikigai.toolbox.utils.setupSunlightSchedule
 
 class ZoneTimeDateChangeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -19,7 +19,7 @@ class ZoneTimeDateChangeReceiver : BroadcastReceiver() {
                     serviceType = ServiceType.TOOLBOX,
                     logMessage = LogMessage.DEVICE_TIME_CHANGED,
                 )
-                ToolboxPreferences.getSunlightSchedule(context).setupAlarms(context)
+                context.setupSunlightSchedule(ToolboxPreferences.getSunlightSchedule(context))
             }
 
             Intent.ACTION_TIMEZONE_CHANGED -> {
@@ -27,7 +27,7 @@ class ZoneTimeDateChangeReceiver : BroadcastReceiver() {
                     serviceType = ServiceType.TOOLBOX,
                     logMessage = LogMessage.DEVICE_TIME_ZONE_CHANGED,
                 )
-                ToolboxPreferences.getSunlightSchedule(context).setupAlarms(context)
+                context.setupSunlightSchedule(ToolboxPreferences.getSunlightSchedule(context))
             }
 
             Intent.ACTION_DATE_CHANGED -> {
@@ -35,7 +35,7 @@ class ZoneTimeDateChangeReceiver : BroadcastReceiver() {
                     serviceType = ServiceType.TOOLBOX,
                     logMessage = LogMessage.DEVICE_DATE_CHANGED,
                 )
-                ToolboxPreferences.getSunlightSchedule(context).setupAlarms(context)
+                context.setupSunlightSchedule(ToolboxPreferences.getSunlightSchedule(context))
             }
         }
     }

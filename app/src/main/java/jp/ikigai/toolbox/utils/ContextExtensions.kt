@@ -2,6 +2,7 @@ package jp.ikigai.toolbox.utils
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -15,9 +16,11 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.SunlightSchedule
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
+import jp.ikigai.toolbox.receivers.AlarmReceiver
 import jp.ikigai.toolbox.services.ToolboxAccessibilityService
 import jp.ikigai.toolbox.services.ToolboxNotificationListener
 import jp.ikigai.toolbox.services.ToolboxService
@@ -196,4 +199,46 @@ fun Context.getPackageInfoSafely(packageName: String, serviceType: ServiceType):
         )
         null
     }
+}
+
+fun Context.setupSunlightSchedule(sunlightSchedule: SunlightSchedule) {
+    val alarmManager = getSystemService(AlarmManager::class.java)
+    if (!alarmManager.canScheduleExactAlarms()) return
+
+    val startIntent = Intent(this, AlarmReceiver::class.java)
+    val startPendingIntent = PendingIntent.getBroadcast(
+        this,
+        92160,
+        startIntent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    val stopIntent = Intent(this, AlarmReceiver::class.java)
+    val stopPendingIntent = PendingIntent.getBroadcast(
+        this,
+        36848,
+        stopIntent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    alarmManager.cancel(startPendingIntent)
+    alarmManager.cancel(stopPendingIntent)
+
+    val (startMillis, endMillis) = sunlightSchedule.getTimeRangeMillis()
+
+    alarmManager.set(
+        AlarmManager.RTC_WAKEUP,
+        startMillis,
+        startPendingIntent,
+    )
+    alarmManager.setExact(
+        AlarmManager.RTC_WAKEUP,
+        endMillis,
+        stopPendingIntent,
+    )
+
+    AppModule.serviceLogDao.insert(
+        serviceType = ServiceType.SUNLIGHT_MON,
+        logMessage = LogMessage.ALARMS_SETUP,
+    )
 }

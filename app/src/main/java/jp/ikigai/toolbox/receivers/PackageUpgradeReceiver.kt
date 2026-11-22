@@ -6,12 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.data.setupAlarms
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.services.AppNotifierService
 import jp.ikigai.toolbox.utils.canScheduleExactAlarms
+import jp.ikigai.toolbox.utils.setupSunlightSchedule
 
 class PackageUpgradeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -25,7 +25,7 @@ class PackageUpgradeReceiver : BroadcastReceiver() {
         if (context == null || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
 
         if (context.canScheduleExactAlarms) {
-            ToolboxPreferences.getSunlightSchedule(context).setupAlarms(context)
+            context.setupSunlightSchedule(ToolboxPreferences.getSunlightSchedule(context))
         }
 
         context.apply {
