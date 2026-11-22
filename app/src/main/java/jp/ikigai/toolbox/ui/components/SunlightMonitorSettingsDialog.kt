@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.SunlightSchedule
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
@@ -229,7 +230,10 @@ fun SunlightMonitorSettingsDialog(
     }
 
     AlertDialog(
-        modifier = Modifier.imePadding(),
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .imePadding(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = {
             dismiss()
         },
