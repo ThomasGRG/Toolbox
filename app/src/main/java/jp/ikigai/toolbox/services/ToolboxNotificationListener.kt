@@ -29,6 +29,7 @@ class ToolboxNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         if (
             sbn == null ||
+            sbn.isOngoing ||
             isGroupSummaryNotification(sbn) ||
             isMediaNotification(sbn)
         ) return
