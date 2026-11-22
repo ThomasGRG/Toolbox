@@ -4,6 +4,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -258,6 +259,7 @@ fun SunlightMonitorSettingsDialog(
                         if (ToolboxPreferences.isToolboxEnabled(context)) {
                             context.startToolboxService(SunlightMonitorService.ACTION_UPDATE_THRESHOLDS)
                         }
+                        Toast.makeText(context, R.string.saved, Toast.LENGTH_SHORT).show()
                         dismiss()
                     }
                 },

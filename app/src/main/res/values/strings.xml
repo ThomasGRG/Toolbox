@@ -60,6 +60,7 @@
     <string name="grant_permission">Grant</string>
     <string name="permission_granted">Granted</string>
     <string name="save">Save</string>
+    <string name="saved">Saved</string>
     <string name="set">Set</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
