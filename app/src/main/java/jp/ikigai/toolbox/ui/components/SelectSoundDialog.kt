@@ -38,8 +38,7 @@ fun SelectSoundDialog(
     }
 
     AlertDialog(
-        modifier = Modifier
-            .fillMaxWidth(0.9f),
+        modifier = Modifier.fillMaxWidth(0.9f),
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = dismiss,
         dismissButton = {
@@ -95,6 +94,7 @@ fun SelectSoundDialog(
                         Text(
                             text = fileName,
                             modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }
