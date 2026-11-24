@@ -15,8 +15,8 @@ extensions.configure<ApplicationExtension> {
         applicationId = "jp.ikigai.toolbox"
         minSdk = 33
         targetSdk = 37
-        versionCode = 8
-        versionName = "1.6.1"
+        versionCode = 9
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
