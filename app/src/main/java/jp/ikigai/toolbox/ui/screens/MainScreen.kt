@@ -66,6 +66,7 @@ import jp.ikigai.toolbox.utils.batteryOptimizationStatus
 import jp.ikigai.toolbox.utils.canScheduleExactAlarms
 import jp.ikigai.toolbox.utils.canWriteSettings
 import jp.ikigai.toolbox.utils.copyUriToInternalStorage
+import jp.ikigai.toolbox.utils.deleteFileFromInternalStorage
 import jp.ikigai.toolbox.utils.fileExists
 import jp.ikigai.toolbox.utils.hasNotificationListenerAccess
 import jp.ikigai.toolbox.utils.hasPostNotificationPerm
@@ -128,6 +129,9 @@ fun MainScreen() {
         uri?.let { selectedUri ->
             coroutineScope.launch(Dispatchers.IO) {
                 context.copyUriToInternalStorage(selectedUri)?.let {
+                    ToolboxPreferences.getSoundFixerRingtone(context)?.also { fileName ->
+                        context.deleteFileFromInternalStorage(fileName)
+                    }
                     ToolboxPreferences.setSoundFixerRingtone(context, it)
                     soundFixerRingtone = it
                 }

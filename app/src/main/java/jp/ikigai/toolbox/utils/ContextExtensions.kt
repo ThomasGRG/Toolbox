@@ -158,8 +158,9 @@ fun Context.fileExists(fileName: String): Boolean {
 
 fun Context.copyUriToInternalStorage(uri: Uri): String? {
     val originalFileName = uri.getFileNameFromUri(contentResolver) ?: return null
+    val destinationFileName = "${System.currentTimeMillis()}_$originalFileName"
 
-    val destinationFile = File(filesDir, originalFileName)
+    val destinationFile = File(filesDir, destinationFileName)
 
     try {
         contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -167,9 +168,17 @@ fun Context.copyUriToInternalStorage(uri: Uri): String? {
                 inputStream.copyTo(outputStream)
             }
         }
-        return originalFileName
+        return destinationFileName
     } catch (_: Exception) {
         return null
+    }
+}
+
+fun Context.deleteFileFromInternalStorage(fileName: String) {
+    try {
+        File(filesDir, fileName).delete()
+    } catch (_: Exception) {
+        return
     }
 }
 
