@@ -96,6 +96,7 @@
 
         <receiver android:name=".receivers.InstallNotificationDismissedReceiver" />
         <receiver android:name=".receivers.UpdateNotificationDismissedReceiver" />
+        <receiver android:name=".receivers.WidgetPinSuccessReceiver" />
         <receiver android:name=".receivers.AlarmReceiver" />
 
         <receiver

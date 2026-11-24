@@ -1,8 +1,10 @@
 package jp.ikigai.toolbox.ui.screens
 
 import android.Manifest
+import android.app.PendingIntent
 import android.app.StatusBarManager
 import android.content.ComponentName
+import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.widget.Toast
@@ -44,6 +46,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import jp.ikigai.toolbox.R
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
+import jp.ikigai.toolbox.receivers.WidgetPinSuccessReceiver
 import jp.ikigai.toolbox.services.AppNotifierService
 import jp.ikigai.toolbox.services.NetSpeedMonService
 import jp.ikigai.toolbox.services.SoundFixerService
@@ -497,10 +500,18 @@ fun MainScreen() {
                     onClick = {
                         if (accessibilityServiceEnabled) {
                             coroutineScope.launch {
+                                val successCallback = PendingIntent.getBroadcast(
+                                    context,
+                                    1001,
+                                    Intent(context, WidgetPinSuccessReceiver::class.java),
+                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                )
+
                                 GlanceAppWidgetManager(context).requestPinGlanceAppWidget(
                                     receiver = LockWidgetReceiver::class.java,
                                     preview = LockWidget(),
                                     previewState = DpSize(100.dp, 100.dp),
+                                    successCallback = successCallback,
                                 )
                             }
                         } else {

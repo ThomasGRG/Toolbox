@@ -6,6 +6,7 @@
 
     <string name="tiles">Quick Settings Tiles</string>
     <string name="widgets">Widgets</string>
+    <string name="widget_added">Widget added</string>
     <string name="services">Services</string>
     <string name="permissions">Permissions</string>
 
