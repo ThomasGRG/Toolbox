@@ -125,23 +125,6 @@ fun MainScreen() {
         )
     }
 
-    var soundFixerGlobalNotificationSound by remember(key1 = context) {
-        mutableStateOf(
-            ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
-        )
-    }
-
-    val globalNotificationSoundExists by remember(
-        key1 = soundFixerGlobalNotificationSound,
-        key2 = context
-    ) {
-        mutableStateOf(
-            soundFixerGlobalNotificationSound?.let {
-                context.fileExists(it)
-            } ?: false
-        )
-    }
-
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -150,19 +133,6 @@ fun MainScreen() {
                 context.copyUriToInternalStorage(selectedUri)?.let {
                     ToolboxPreferences.setSoundFixerRingtone(context, it)
                     soundFixerRingtone = it
-                }
-            }
-        }
-    }
-
-    val globalNotificationSoundPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let { selectedUri ->
-            coroutineScope.launch(Dispatchers.IO) {
-                context.copyUriToInternalStorage(selectedUri)?.let {
-                    ToolboxPreferences.setSoundFixerGlobalNotificationSound(context, it)
-                    soundFixerGlobalNotificationSound = it
                 }
             }
         }
@@ -496,7 +466,7 @@ fun MainScreen() {
                             canStart = hasNotificationPermission && hasReadPhoneStatePermission && hasNotificationListenerAccess,
                             isRunning = soundFixerState,
                             startService = {
-                                if (ringtoneExists && globalNotificationSoundExists) {
+                                if (ringtoneExists) {
                                     ToolboxPreferences.setToolboxEnabled(context, true)
                                     ToolboxPreferences.setSoundFixerEnabled(context, true)
                                     context.startToolboxService()
@@ -647,9 +617,6 @@ fun MainScreen() {
                         selectedRingtone = soundFixerRingtone,
                         ringtoneExists = ringtoneExists,
                         ringtonePickerLauncher = ringtonePickerLauncher,
-                        selectedGlobalNotificationSound = soundFixerGlobalNotificationSound,
-                        globalNotificationSoundExists = globalNotificationSoundExists,
-                        globalNotificationSoundPickerLauncher = globalNotificationSoundPickerLauncher,
                     )
                 }
             }

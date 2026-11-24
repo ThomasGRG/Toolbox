@@ -43,9 +43,6 @@
     <string name="ringtone">Ringtone</string>
     <string name="select_ringtone">Select ringtone</string>
     <string name="no_ringtone_selected">No ringtone selected</string>
-    <string name="global_notification_sound">Global notification sound</string>
-    <string name="select_global_notification_sound">Select global notification sound</string>
-    <string name="no_global_notification_sound_selected">No global notification sound selected</string>
     <string name="per_app_sounds">Per-app sounds</string>
     <string name="select_app">Select app</string>
     <string name="select_sound">Select sound</string>

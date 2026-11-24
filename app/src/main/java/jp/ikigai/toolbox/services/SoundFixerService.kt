@@ -117,10 +117,7 @@ class SoundFixerService(
         notificationSoundsJob = coroutineScope.launch {
             ToolboxServiceState.notificationSounds.collect { packageName ->
                 if (canPlayNotification()) {
-                    appSoundConfigMap.getOrDefault(
-                        packageName,
-                        ToolboxPreferences.getSoundFixerGlobalNotificationSound(context)
-                    )?.let {
+                    appSoundConfigMap[packageName]?.let {
                         soundPoolManager?.playNotification(
                             File(context.filesDir, it).absolutePath
                         )

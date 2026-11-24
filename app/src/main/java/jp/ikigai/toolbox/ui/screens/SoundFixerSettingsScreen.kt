@@ -52,9 +52,6 @@ fun SoundFixerSettingsScreen(
     selectedRingtone: String?,
     ringtoneExists: Boolean,
     ringtonePickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    selectedGlobalNotificationSound: String?,
-    globalNotificationSoundExists: Boolean,
-    globalNotificationSoundPickerLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
 ) {
     val context = LocalContext.current
 
@@ -150,15 +147,6 @@ fun SoundFixerSettingsScreen(
             selectLabel = stringResource(R.string.select_ringtone),
             mimeTypes = arrayOf("audio/*"),
             filePickerLauncher = ringtonePickerLauncher,
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        FileSelectionCard(
-            title = stringResource(R.string.global_notification_sound),
-            selectedFileName = selectedGlobalNotificationSound,
-            noFileSelectedPlaceholder = stringResource(R.string.no_global_notification_sound_selected),
-            selectLabel = stringResource(R.string.select_global_notification_sound),
-            mimeTypes = arrayOf("audio/*"),
-            filePickerLauncher = globalNotificationSoundPickerLauncher,
         )
         Spacer(modifier = Modifier.height(10.dp))
         Row(
@@ -275,7 +263,7 @@ fun SoundFixerSettingsScreen(
                 ToolboxPreferences.setSoundFixerEnabled(context, true)
                 context.startToolboxService()
             },
-            enabled = canStart && ringtoneExists && globalNotificationSoundExists && !isRunning,
+            enabled = canStart && ringtoneExists && !isRunning,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
