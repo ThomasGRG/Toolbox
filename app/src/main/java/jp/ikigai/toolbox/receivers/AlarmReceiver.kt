@@ -3,7 +3,7 @@ package jp.ikigai.toolbox.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
@@ -15,7 +15,7 @@ import jp.ikigai.toolbox.utils.stopToolboxService
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.SUNLIGHT_MON,
             logMessage = LogMessage.RECEIVED_ALARM,
         )

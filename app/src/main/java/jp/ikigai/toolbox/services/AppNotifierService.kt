@@ -18,9 +18,6 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 import jp.ikigai.toolbox.BuildConfig
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.dao.AppUpdateInfoDao
-import jp.ikigai.toolbox.dao.ServiceLogDao
-import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.AppUpdateInfo
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
@@ -29,18 +26,12 @@ import jp.ikigai.toolbox.preferences.ToolboxPreferences
 import jp.ikigai.toolbox.receivers.InstallNotificationDismissedReceiver
 import jp.ikigai.toolbox.receivers.UpdateNotificationDismissedReceiver
 import jp.ikigai.toolbox.utils.getPackageInfoSafely
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 
 class AppNotifierService(
     private val context: Context,
-    private val appUpdateInfoDao: AppUpdateInfoDao = AppModule.appUpdateInfoDao,
-    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
 ) {
-
     companion object {
         const val ACTION_STOP = "ACTION_STOP_APP_NOTIFIER"
         const val ACTION_PACKAGE_UPGRADED = "ACTION_PACKAGE_UPGRADED"
@@ -56,15 +47,13 @@ class AppNotifierService(
 
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
-
     private val packageNameVersionCodeMap = mutableMapOf<String, Long>()
     private val packageNameVersionNameMap = mutableMapOf<String, String>()
 
     private val packageAddedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val packageName = intent.dataString?.removePrefix("$PACKAGE_DATA_SCHEME:").orEmpty()
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.APP_NOTIFIER,
                 logMessage = LogMessage.PACKAGE_ADDED,
                 extra = packageName,
@@ -80,9 +69,9 @@ class AppNotifierService(
                     handleAppUpdateNotification(packageInfo)
                 else {
                     handleAppInstallNotification(packageInfo)
-                    packageInfo.versionName?.let { versionName ->
-                        packageNameVersionNameMap[packageName] = versionName
-                    }
+                }
+                packageInfo.versionName?.let { versionName ->
+                    packageNameVersionNameMap[packageName] = versionName
                 }
             }
         }
@@ -93,7 +82,7 @@ class AppNotifierService(
             if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return
 
             val packageName = intent.dataString?.removePrefix("$PACKAGE_DATA_SCHEME:").orEmpty()
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.APP_NOTIFIER,
                 logMessage = LogMessage.PACKAGE_REMOVED,
                 extra = packageName,
@@ -130,7 +119,7 @@ class AppNotifierService(
     fun onDestroy() {
         if (!ToolboxServiceState.appNotifierState.value) return
         ToolboxServiceState.updateAppNotifierState(false)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.APP_NOTIFIER,
             logMessage = LogMessage.MON_STOPPED,
         )
@@ -141,12 +130,12 @@ class AppNotifierService(
     private fun start() {
         if (!ToolboxPreferences.isAppNotifierEnabled(context) || ToolboxServiceState.appNotifierState.value) return
         ToolboxServiceState.updateAppNotifierState(true)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.APP_NOTIFIER,
             logMessage = LogMessage.MON_RUNNING,
         )
-        val packageInfo = context.packageManager.getInstalledPackages(0)
-        for (info in packageInfo) {
+        val packageInfoList = context.packageManager.getInstalledPackages(0)
+        for (info in packageInfoList) {
             val versionCode = PackageInfoCompat.getLongVersionCode(info)
             packageNameVersionCodeMap[info.packageName] = versionCode
             info.versionName?.let { versionName ->
@@ -180,54 +169,45 @@ class AppNotifierService(
                 ToolboxPreferences.getVersionName(context)?.let { versionName ->
                     packageNameVersionNameMap[it.packageName] = versionName
                 }
-                handleAppUpdateNotification(it, true)
+                handleAppUpdateNotification(it)
+                packageNameVersionNameMap.clear()
             }
             replayAppUpdates()
             replayAppInstalls()
         }
+        start()
     }
 
     private fun getPackageInfoSafely(packageName: String): PackageInfo? {
         return context.getPackageInfoSafely(packageName, ServiceType.APP_NOTIFIER).also {
             if (it == null) {
-                appUpdateInfoDao.apply {
-                    deleteInstall(packageName)
-                    deleteUpdate(packageName)
+                ToolboxPreferences.apply {
+                    deleteInstall(context, packageName)
+                    deleteUpdate(context, packageName)
                 }
             }
         }
     }
 
-    private fun handleAppUpdateNotification(pkgInfo: PackageInfo, isUpgrade: Boolean = false) {
-        coroutineScope.launch {
-            val info = AppUpdateInfo(
-                packageName = pkgInfo.packageName,
-                label = pkgInfo.applicationInfo?.loadLabel(context.packageManager).toString(),
-                updatedAt = System.currentTimeMillis(),
-                version = pkgInfo.versionName,
-                prevVersion = packageNameVersionNameMap[pkgInfo.packageName],
-                isInstall = false
-            )
+    private fun handleAppUpdateNotification(pkgInfo: PackageInfo) {
+        val info = AppUpdateInfo(
+            packageName = pkgInfo.packageName,
+            label = pkgInfo.applicationInfo?.loadLabel(context.packageManager).toString(),
+            updatedAt = System.currentTimeMillis(),
+            version = pkgInfo.versionName,
+            prevVersion = packageNameVersionNameMap[pkgInfo.packageName],
+            isInstall = false
+        )
 
-            if (isUpgrade) {
-                packageNameVersionNameMap.clear()
-                start()
-            } else {
-                pkgInfo.versionName?.let { versionName ->
-                    packageNameVersionNameMap[pkgInfo.packageName] = versionName
-                }
-            }
+        val list: List<AppUpdateInfo>
 
-            val list: List<AppUpdateInfo>
-
-            appUpdateInfoDao.apply {
-                deleteUpdate(info.packageName).join()
-                list = getAllUpdates().plus(info).reversed()
-                insert(info).join()
-            }
-
-            buildAppUpdateNotification(list, lazy { getIcon(pkgInfo) })
+        ToolboxPreferences.apply {
+            deleteUpdate(context, info.packageName)
+            list = getAllUpdates(context).plus(info).reversed()
+            insert(context, info)
         }
+
+        buildAppUpdateNotification(list, lazy { getIcon(pkgInfo) })
     }
 
     private fun buildAppUpdateNotification(list: List<AppUpdateInfo>, icon: Lazy<Bitmap?>) {
@@ -336,22 +316,20 @@ class AppNotifierService(
     }
 
     private fun handleAppInstallNotification(pkgInfo: PackageInfo) {
-        coroutineScope.launch {
-            val info = AppUpdateInfo(
-                packageName = pkgInfo.packageName,
-                label = pkgInfo.applicationInfo?.loadLabel(context.packageManager).toString(),
-                updatedAt = System.currentTimeMillis(),
-                version = pkgInfo.versionName,
-                isInstall = true,
-            )
+        val info = AppUpdateInfo(
+            packageName = pkgInfo.packageName,
+            label = pkgInfo.applicationInfo?.loadLabel(context.packageManager).toString(),
+            updatedAt = System.currentTimeMillis(),
+            version = pkgInfo.versionName,
+            isInstall = true,
+        )
 
-            appUpdateInfoDao.apply {
-                deleteInstall(info.packageName).join()
-                insert(info).join()
-            }
-
-            buildAppInstallNotification(info, getIcon(pkgInfo))
+        ToolboxPreferences.apply {
+            deleteInstall(context, info.packageName)
+            insert(context, info)
         }
+
+        buildAppInstallNotification(info, getIcon(pkgInfo))
     }
 
     private fun buildAppInstallNotification(info: AppUpdateInfo, icon: Bitmap?) {
@@ -406,13 +384,11 @@ class AppNotifierService(
     private fun cancelAppInstallNotification(packageName: String) {
         notificationManager.cancel(packageName.hashCode())
 
-        coroutineScope.launch {
-            appUpdateInfoDao.apply {
-                deleteInstall(packageName).join()
+        ToolboxPreferences.apply {
+            deleteInstall(context, packageName)
 
-                if (getAllInstalls().isEmpty())
-                    notificationManager.cancel(APP_INSTALL_ID)
-            }
+            if (getAllInstalls(context).isEmpty())
+                notificationManager.cancel(APP_INSTALL_ID)
         }
     }
 
@@ -436,35 +412,31 @@ class AppNotifierService(
     }
 
     private fun replayAppUpdates() {
-        coroutineScope.launch {
-            val updates = appUpdateInfoDao.getAllUpdates().reversed()
-            if (updates.isEmpty()) return@launch
+        val updates = ToolboxPreferences.getAllUpdates(context).reversed()
+        if (updates.isEmpty()) return
 
-            serviceLogDao.insert(
-                serviceType = ServiceType.APP_NOTIFIER,
-                logMessage = LogMessage.REPLAY_APP_UPDATES,
-            )
+        ToolboxServiceState.log(
+            serviceType = ServiceType.APP_NOTIFIER,
+            logMessage = LogMessage.REPLAY_APP_UPDATES,
+        )
 
-            getPackageInfoSafely(updates.first().packageName)?.let {
-                buildAppUpdateNotification(updates, lazy { getIcon(it) })
-            }
+        getPackageInfoSafely(updates.first().packageName)?.let {
+            buildAppUpdateNotification(updates, lazy { getIcon(it) })
         }
     }
 
     private fun replayAppInstalls() {
-        coroutineScope.launch {
-            val installs = appUpdateInfoDao.getAllInstalls()
-            if (installs.isEmpty()) return@launch
+        val installs = ToolboxPreferences.getAllInstalls(context)
+        if (installs.isEmpty()) return
 
-            serviceLogDao.insert(
-                serviceType = ServiceType.APP_NOTIFIER,
-                logMessage = LogMessage.REPLAY_APP_INSTALLS,
-            )
+        ToolboxServiceState.log(
+            serviceType = ServiceType.APP_NOTIFIER,
+            logMessage = LogMessage.REPLAY_APP_INSTALLS,
+        )
 
-            for (install in installs) {
-                getPackageInfoSafely(install.packageName)?.let {
-                    buildAppInstallNotification(install, getIcon(it))
-                }
+        for (install in installs) {
+            getPackageInfoSafely(install.packageName)?.let {
+                buildAppInstallNotification(install, getIcon(it))
             }
         }
     }

@@ -2,8 +2,11 @@ package jp.ikigai.toolbox.preferences
 
 import android.content.Context
 import androidx.core.content.edit
+import jp.ikigai.toolbox.data.AppUpdateInfo
 import jp.ikigai.toolbox.data.SunlightSchedule
 import jp.ikigai.toolbox.utils.setupSunlightSchedule
+import org.json.JSONArray
+import org.json.JSONObject
 
 object ToolboxPreferences {
     private const val PREF_NAME = "ToolboxPrefs"
@@ -30,6 +33,7 @@ object ToolboxPreferences {
 
     // AppNotifier Pref Keys
     private const val APP_NOTIFIER_ENABLED = "app_notifier_enabled"
+    private const val APP_UPDATE_INFO_LIST = "app_update_info_list"
 
     fun setToolboxEnabled(context: Context, enabled: Boolean) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -158,5 +162,91 @@ object ToolboxPreferences {
     fun getVersionName(context: Context): String? {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getString(VERSION_NAME, null)
+    }
+
+    fun saveAppUpdateInfoList(context: Context, appInfoList: List<AppUpdateInfo>) {
+        val jsonArray = JSONArray()
+
+        for (appInfo in appInfoList) {
+            val jsonObject = JSONObject().apply {
+                put("packageName", appInfo.packageName)
+                put("label", appInfo.label)
+                put("updatedAt", appInfo.updatedAt)
+                put("version", appInfo.version)
+                put("prevVersion", appInfo.prevVersion)
+                put("isInstall", appInfo.isInstall)
+            }
+            jsonArray.put(jsonObject)
+        }
+
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putString(APP_UPDATE_INFO_LIST, jsonArray.toString()) }
+    }
+
+    private fun getAppUpdateInfoList(context: Context): List<AppUpdateInfo> {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val jsonString = prefs.getString(APP_UPDATE_INFO_LIST, null) ?: return emptyList()
+
+        val appUpdateInfoList = mutableListOf<AppUpdateInfo>()
+        val jsonArray = JSONArray(jsonString)
+
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            val appUpdateInfo = AppUpdateInfo(
+                packageName = jsonObject.getString("packageName"),
+                label = jsonObject.getString("label"),
+                updatedAt = jsonObject.getLong("updatedAt"),
+                version = jsonObject.optString("version"),
+                prevVersion = jsonObject.optString("prevVersion"),
+                isInstall = jsonObject.getBoolean("isInstall"),
+            )
+            appUpdateInfoList.add(appUpdateInfo)
+        }
+
+        return appUpdateInfoList
+    }
+
+    fun insert(context: Context, appUpdateInfo: AppUpdateInfo) {
+        val appUpdateInfoList = getAppUpdateInfoList(context).toMutableList()
+        appUpdateInfoList.add(appUpdateInfo)
+        saveAppUpdateInfoList(
+            context,
+            appUpdateInfoList,
+        )
+    }
+
+    fun getAllUpdates(context: Context): List<AppUpdateInfo> {
+        return getAppUpdateInfoList(context).filter { appUpdateInfo -> !appUpdateInfo.isInstall }
+    }
+
+    fun getAllInstalls(context: Context): List<AppUpdateInfo> {
+        return getAppUpdateInfoList(context).filter { appUpdateInfo -> appUpdateInfo.isInstall }
+    }
+
+    fun deleteInstall(context: Context, packageName: String) {
+        saveAppUpdateInfoList(
+            context,
+            getAppUpdateInfoList(context).filter { appUpdateInfo ->
+                !(appUpdateInfo.packageName == packageName && appUpdateInfo.isInstall)
+            },
+        )
+    }
+
+    fun deleteAllUpdates(context: Context) {
+        saveAppUpdateInfoList(
+            context,
+            getAppUpdateInfoList(context).filter { appUpdateInfo ->
+                appUpdateInfo.isInstall
+            },
+        )
+    }
+
+    fun deleteUpdate(context: Context, packageName: String) {
+        saveAppUpdateInfoList(
+            context,
+            getAppUpdateInfoList(context).filter { appUpdateInfo ->
+                !(appUpdateInfo.packageName == packageName && !appUpdateInfo.isInstall)
+            },
+        )
     }
 }

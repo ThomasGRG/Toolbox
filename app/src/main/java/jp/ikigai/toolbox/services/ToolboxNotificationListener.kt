@@ -2,7 +2,6 @@ package jp.ikigai.toolbox.services
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
@@ -11,7 +10,7 @@ class ToolboxNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NOTIFICATION_LISTENER,
             logMessage = LogMessage.CONNECTED,
         )
@@ -19,7 +18,7 @@ class ToolboxNotificationListener : NotificationListenerService() {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NOTIFICATION_LISTENER,
             logMessage = LogMessage.DISCONNECTED,
         )

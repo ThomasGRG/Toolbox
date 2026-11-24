@@ -13,36 +13,35 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ServiceLog
+import jp.ikigai.toolbox.data.ToolboxServiceState
 
 @Composable
 fun ViewLogsDialog(
     dismiss: () -> Unit,
 ) {
-    val logsState = AppModule.serviceLogDao.observeAll().collectAsState()
+    val logs = remember { mutableStateListOf<ServiceLog>() }
+
+    LaunchedEffect(Unit) {
+        ToolboxServiceState.logs.collect { log ->
+            logs.add(0, log)
+        }
+    }
 
     AlertDialog(
         modifier = Modifier.fillMaxWidth(0.9f),
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = dismiss,
-        dismissButton = {
-            Button(
-                onClick = {
-                    AppModule.serviceLogDao.deleteAll()
-                },
-            ) {
-                Text(
-                    text = stringResource(R.string.clear)
-                )
-            }
-        },
+        dismissButton = null,
         confirmButton = {
             Button(
                 onClick = dismiss,
@@ -63,7 +62,7 @@ fun ViewLogsDialog(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 reverseLayout = true,
             ) {
-                if (logsState.value.isEmpty()) {
+                if (logs.isEmpty()) {
                     item {
                         Text(
                             text = stringResource(R.string.no_logs_found),
@@ -76,7 +75,7 @@ fun ViewLogsDialog(
                     }
                 }
                 items(
-                    items = logsState.value,
+                    items = logs,
                 ) { log ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),

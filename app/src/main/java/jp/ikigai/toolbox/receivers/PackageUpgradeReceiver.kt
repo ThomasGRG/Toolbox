@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
@@ -17,7 +17,7 @@ class PackageUpgradeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
 
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.APP_NOTIFIER,
             logMessage = LogMessage.PACKAGE_UPGRADED,
         )

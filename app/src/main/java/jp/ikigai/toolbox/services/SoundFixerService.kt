@@ -10,8 +10,6 @@ import android.net.Uri
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
-import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
@@ -25,7 +23,6 @@ import java.io.File
 
 class SoundFixerService(
     private val context: Context,
-    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
 ) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SOUND_FIXER"
@@ -61,7 +58,7 @@ class SoundFixerService(
                     ToolboxPreferences.isSoundFixerEnabled(context)
                 ) {
                     ToolboxServiceState.updateSoundFixerState(true)
-                    serviceLogDao.insert(
+                    ToolboxServiceState.log(
                         serviceType = ServiceType.SOUND_FIXER,
                         logMessage = LogMessage.MON_RUNNING,
                     )
@@ -75,7 +72,7 @@ class SoundFixerService(
     fun onDestroy() {
         if (!ToolboxServiceState.soundFixerState.value) return
         ToolboxServiceState.updateSoundFixerState(false)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.SOUND_FIXER,
             logMessage = LogMessage.MON_STOPPED,
         )
@@ -88,7 +85,7 @@ class SoundFixerService(
             try {
                 telephonyManager.unregisterTelephonyCallback(it)
             } catch (e: Exception) {
-                serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SOUND_FIXER,
                     logMessage = LogMessage.CAUGHT_EXCEPTION,
                     exceptionMessage = e.message,
@@ -112,7 +109,7 @@ class SoundFixerService(
     private fun hasSelectedAudio(): Boolean {
         val ringtone = ToolboxPreferences.getSoundFixerRingtone(context)
         if (ringtone == null) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.NO_RINGTONE,
                 logType = Log.WARN,
@@ -121,7 +118,7 @@ class SoundFixerService(
         }
         val ringtoneExists = context.fileExists(ringtone)
         if (!ringtoneExists) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.FILE_NOT_EXISTS,
                 logType = Log.WARN,
@@ -136,7 +133,7 @@ class SoundFixerService(
             override fun onCallStateChanged(state: Int) {
                 when (state) {
                     TelephonyManager.CALL_STATE_RINGING -> {
-                        serviceLogDao.insert(
+                        ToolboxServiceState.log(
                             serviceType = ServiceType.SOUND_FIXER,
                             logMessage = LogMessage.INCOMING_CALL,
                         )
@@ -149,7 +146,7 @@ class SoundFixerService(
                             activeCaller = null
                             LogMessage.CALL_IDLE
                         } else LogMessage.CALL_OFF_HOOK
-                        serviceLogDao.insert(
+                        ToolboxServiceState.log(
                             serviceType = ServiceType.SOUND_FIXER,
                             logMessage = logMessage,
                         )
@@ -168,7 +165,7 @@ class SoundFixerService(
                 callback
             )
         } catch (e: SecurityException) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
@@ -181,13 +178,13 @@ class SoundFixerService(
         val isRingModeVibrate = audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
         val isRingVolumeZero = audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0
         if (isRingModeVibrate) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.ON_VIBRATE,
             )
         }
         if (isRingVolumeZero) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.RING_VOL_ZERO,
             )
@@ -199,13 +196,13 @@ class SoundFixerService(
         val isRingModeSilent = audioManager.ringerMode == AudioManager.RINGER_MODE_SILENT
         val isRingVolumeZero = audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0
         if (isRingModeSilent) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.ON_SILENT,
             )
         }
         if (isRingVolumeZero) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.RING_VOL_ZERO,
             )
@@ -218,14 +215,14 @@ class SoundFixerService(
             val isFilterAll = notificationManager.currentInterruptionFilter !=
                     NotificationManager.INTERRUPTION_FILTER_ALL
             if (isFilterAll) {
-                serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SOUND_FIXER,
                     logMessage = LogMessage.DND_ON,
                 )
             }
             return isFilterAll
         } catch (e: Exception) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
@@ -275,12 +272,12 @@ class SoundFixerService(
                 if (player === prepared && canPlay()) {
                     try {
                         prepared.start()
-                        serviceLogDao.insert(
+                        ToolboxServiceState.log(
                             serviceType = ServiceType.SOUND_FIXER,
                             logMessage = LogMessage.PLAYBACK_STARTED,
                         )
                     } catch (e: Exception) {
-                        serviceLogDao.insert(
+                        ToolboxServiceState.log(
                             serviceType = ServiceType.SOUND_FIXER,
                             logMessage = LogMessage.CAUGHT_EXCEPTION,
                             exceptionMessage = e.message,
@@ -294,7 +291,7 @@ class SoundFixerService(
             }
 
             mediaPlayer.setOnErrorListener { _, what, extra ->
-                serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SOUND_FIXER,
                     logMessage = LogMessage.PLAYBACK_ERROR,
                     extra = "$what/$extra",
@@ -306,7 +303,7 @@ class SoundFixerService(
 
             mediaPlayer.prepareAsync()
         } catch (e: Exception) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,
@@ -326,13 +323,13 @@ class SoundFixerService(
                 it.setOnPreparedListener(null)
                 it.setOnErrorListener(null)
                 it.release()
-                serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SOUND_FIXER,
                     logMessage = LogMessage.PLAYER_RELEASED,
                 )
             }
         } catch (e: Exception) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.SOUND_FIXER,
                 logMessage = LogMessage.CAUGHT_EXCEPTION,
                 exceptionMessage = e.message,

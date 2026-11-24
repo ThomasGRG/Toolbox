@@ -20,7 +20,7 @@ package jp.ikigai.toolbox.services
 import android.accessibilityservice.AccessibilityService
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import jp.ikigai.toolbox.data.AppModule
+import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.utils.startToolboxService
@@ -30,7 +30,7 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.ACCESSIBILITY,
             logMessage = LogMessage.CONNECTED,
         )
@@ -43,7 +43,7 @@ class ToolboxAccessibilityService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         when (event?.keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                AppModule.serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.ACCESSIBILITY,
                     logMessage = LogMessage.VOL_UP,
                 )
@@ -51,7 +51,7 @@ class ToolboxAccessibilityService : AccessibilityService() {
                 return false
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                AppModule.serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.ACCESSIBILITY,
                     logMessage = LogMessage.VOL_DOWN,
                 )

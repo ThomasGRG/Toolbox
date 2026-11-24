@@ -14,8 +14,6 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
@@ -25,9 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class ToolboxService(
-    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
-) : Service() {
+class ToolboxService : Service() {
 
     companion object {
         const val ACTION_STOP = "ACTION_STOP_TOOLBOX"
@@ -40,7 +36,7 @@ class ToolboxService(
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 Intent.ACTION_SCREEN_OFF -> {
-                    serviceLogDao.insert(
+                    ToolboxServiceState.log(
                         serviceType = ServiceType.TOOLBOX,
                         logMessage = LogMessage.SCREEN_OFF,
                     )
@@ -49,7 +45,7 @@ class ToolboxService(
                 }
 
                 Intent.ACTION_SCREEN_ON -> {
-                    serviceLogDao.insert(
+                    ToolboxServiceState.log(
                         serviceType = ServiceType.TOOLBOX,
                         logMessage = LogMessage.SCREEN_ON,
                     )
@@ -71,7 +67,7 @@ class ToolboxService(
 
     override fun onCreate() {
         super.onCreate()
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.TOOLBOX,
             logMessage = LogMessage.CREATED,
         )
@@ -110,7 +106,7 @@ class ToolboxService(
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.TOOLBOX,
                 logMessage = LogMessage.STOPPED,
             )
@@ -131,7 +127,7 @@ class ToolboxService(
         startForegroundCompat()
         if (!ToolboxServiceState.toolboxState.value) {
             ToolboxServiceState.updateToolboxState(true)
-            serviceLogDao.insert(
+            ToolboxServiceState.log(
                 serviceType = ServiceType.TOOLBOX,
                 logMessage = LogMessage.RUNNING,
             )
@@ -211,7 +207,7 @@ class ToolboxService(
     override fun onDestroy() {
         runningServicesJob.cancel()
         ToolboxServiceState.updateToolboxState(false)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.TOOLBOX,
             logMessage = LogMessage.DESTROYED,
         )

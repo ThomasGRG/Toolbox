@@ -13,10 +13,9 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
-import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.data.SunlightSchedule
+import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
 import jp.ikigai.toolbox.preferences.ToolboxPreferences
@@ -174,24 +173,11 @@ fun Context.copyUriToInternalStorage(uri: Uri): String? {
     }
 }
 
-fun Context.getAvailableSounds(): List<String> {
-    return filesDir
-        .listFiles()
-        ?.filter {
-            if (!it.isFile || it.length() > 1048576) return@filter false
-            val mimeType = MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(it.extension.lowercase())
-            mimeType?.startsWith("audio/") == true
-        }
-        ?.map { it.name }
-        ?: emptyList()
-}
-
 fun Context.getPackageInfoSafely(packageName: String, serviceType: ServiceType): PackageInfo? {
     return try {
         packageManager.getPackageInfo(packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
-        AppModule.serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = serviceType,
             logMessage = LogMessage.CAUGHT_EXCEPTION,
             exceptionMessage = e.message,
@@ -237,7 +223,7 @@ fun Context.setupSunlightSchedule(sunlightSchedule: SunlightSchedule) {
         stopPendingIntent,
     )
 
-    AppModule.serviceLogDao.insert(
+    ToolboxServiceState.log(
         serviceType = ServiceType.SUNLIGHT_MON,
         logMessage = LogMessage.ALARMS_SETUP,
     )

@@ -20,8 +20,6 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
 import jp.ikigai.toolbox.MainActivity
 import jp.ikigai.toolbox.R
-import jp.ikigai.toolbox.data.AppModule
-import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
 import jp.ikigai.toolbox.enums.LogMessage
 import jp.ikigai.toolbox.enums.ServiceType
@@ -29,7 +27,6 @@ import jp.ikigai.toolbox.preferences.ToolboxPreferences
 
 class NetSpeedMonService(
     private val context: Context,
-    private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
 ) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_NETSPEEDMON"
@@ -97,7 +94,7 @@ class NetSpeedMonService(
         }
 
         ToolboxServiceState.updateNetSpeedMonState(true)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_RUNNING,
         )
@@ -106,7 +103,7 @@ class NetSpeedMonService(
     private fun pauseMon() {
         if (!ToolboxPreferences.isNetSpeedMonEnabled(context) || !ToolboxServiceState.netSpeedMonState.value) return
         handler?.removeCallbacks(calcSpeedRunnable)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_PAUSED,
         )
@@ -117,7 +114,7 @@ class NetSpeedMonService(
         previousRxBytes = TrafficStats.getTotalRxBytes()
         previousTxBytes = TrafficStats.getTotalTxBytes()
         handler?.postDelayed(calcSpeedRunnable, intervalMs)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_RUNNING,
         )
@@ -135,7 +132,7 @@ class NetSpeedMonService(
         notificationManager.cancel(NOTIFICATION_ID)
 
         ToolboxServiceState.updateNetSpeedMonState(false)
-        serviceLogDao.insert(
+        ToolboxServiceState.log(
             serviceType = ServiceType.NET_SPEED_MON,
             logMessage = LogMessage.MON_STOPPED,
         )

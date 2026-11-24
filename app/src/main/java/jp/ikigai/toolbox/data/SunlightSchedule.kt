@@ -49,7 +49,7 @@ data class SunlightSchedule(
 
         return if (start <= end) {
             if (now in start..end) {
-                AppModule.serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SUNLIGHT_MON,
                     logMessage = LogMessage.TIME_BETWEEN,
                 )
@@ -57,7 +57,7 @@ data class SunlightSchedule(
             } else false
         } else {
             if (now >= start || now <= end) {
-                AppModule.serviceLogDao.insert(
+                ToolboxServiceState.log(
                     serviceType = ServiceType.SUNLIGHT_MON,
                     logMessage = LogMessage.TIME_BETWEEN,
                 )
