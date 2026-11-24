@@ -10,7 +10,6 @@ import android.net.Uri
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
-import jp.ikigai.toolbox.dao.AppSoundConfigDao
 import jp.ikigai.toolbox.data.AppModule
 import jp.ikigai.toolbox.dao.ServiceLogDao
 import jp.ikigai.toolbox.data.ToolboxServiceState
@@ -27,7 +26,6 @@ import java.io.File
 class SoundFixerService(
     private val context: Context,
     private val serviceLogDao: ServiceLogDao = AppModule.serviceLogDao,
-    private val appSoundConfigDao: AppSoundConfigDao = AppModule.appSoundConfigDao,
 ) {
     companion object {
         const val ACTION_STOP = "ACTION_STOP_SOUND_FIXER"
@@ -42,13 +40,10 @@ class SoundFixerService(
     private val telephonyManager = context.getSystemService(TelephonyManager::class.java)
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
-    private var soundPoolManager: SoundPoolManager? = null
-
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private var appSoundConfigMap = emptyMap<String, String>()
-    private var perAppConfigsJob: Job? = null
-    private var notificationSoundsJob: Job? = null
+    private var callerJob: Job? = null
+    private var activeCaller: String? = null
 
     fun onStartCommand(intent: Intent?) {
         when (intent?.action) {
@@ -71,7 +66,6 @@ class SoundFixerService(
                         logMessage = LogMessage.MON_RUNNING,
                     )
                     initJobs()
-                    soundPoolManager = SoundPoolManager()
                     registerCallStateListener()
                 }
             }
@@ -88,11 +82,7 @@ class SoundFixerService(
         ringing = false
         stopMusic()
 
-        notificationSoundsJob?.cancel()
-        perAppConfigsJob?.cancel()
-
-        soundPoolManager?.releaseSoundPool()
-        soundPoolManager = null
+        callerJob?.cancel()
 
         telephonyCallback?.let {
             try {
@@ -109,19 +99,11 @@ class SoundFixerService(
     }
 
     private fun initJobs() {
-        perAppConfigsJob = coroutineScope.launch {
-            appSoundConfigDao.observeAll().collect { configList ->
-                appSoundConfigMap = configList.associate { it.packageName to it.fileName }
-            }
-        }
-        notificationSoundsJob = coroutineScope.launch {
-            ToolboxServiceState.notificationSounds.collect { packageName ->
-                if (canPlayNotification()) {
-                    appSoundConfigMap[packageName]?.let {
-                        soundPoolManager?.playNotification(
-                            File(context.filesDir, it).absolutePath
-                        )
-                    }
+        callerJob = coroutineScope.launch {
+            for (caller in ToolboxServiceState.callerChannel) {
+                if (activeCaller == null) {
+                    activeCaller = caller
+                    evaluatePlayback()
                 }
             }
         }
@@ -159,14 +141,17 @@ class SoundFixerService(
                             logMessage = LogMessage.INCOMING_CALL,
                         )
                         ringing = true
-                        evaluatePlayback()
                     }
 
                     TelephonyManager.CALL_STATE_OFFHOOK,
                     TelephonyManager.CALL_STATE_IDLE -> {
+                        val logMessage = if (state == TelephonyManager.CALL_STATE_IDLE) {
+                            activeCaller = null
+                            LogMessage.CALL_IDLE
+                        } else LogMessage.CALL_OFF_HOOK
                         serviceLogDao.insert(
                             serviceType = ServiceType.SOUND_FIXER,
-                            logMessage = LogMessage.CALL_IDLE_OFF_HOOK,
+                            logMessage = logMessage,
                         )
                         ringing = false
                         stopMusic()
@@ -253,13 +238,6 @@ class SoundFixerService(
     private fun canPlay(): Boolean {
         return ringing &&
                 hasSelectedAudio() &&
-                !isDndOn() &&
-                !isOnSilent() &&
-                !isOnVibrate()
-    }
-
-    private fun canPlayNotification(): Boolean {
-        return !ringing &&
                 !isDndOn() &&
                 !isOnSilent() &&
                 !isOnVibrate()

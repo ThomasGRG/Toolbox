@@ -1,6 +1,5 @@
 package jp.ikigai.toolbox.services
 
-import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import jp.ikigai.toolbox.data.AppModule
@@ -27,30 +26,12 @@ class ToolboxNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
-        if (
-            sbn == null ||
-            sbn.isOngoing ||
-            isGroupSummaryNotification(sbn) ||
-            isMediaNotification(sbn)
-        ) return
-        ToolboxServiceState.postNotificationSound(
-            sbn.packageName
-        )
-        AppModule.serviceLogDao.insert(
-            serviceType = ServiceType.NOTIFICATION_LISTENER,
-            logMessage = LogMessage.NOTIFICATION_POSTED,
-            extra = sbn.packageName,
-        )
-    }
-
-    private fun isGroupSummaryNotification(sbn: StatusBarNotification): Boolean {
-        return sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY != 0
-    }
-
-    private fun isMediaNotification(sbn: StatusBarNotification): Boolean {
-        return sbn.notification.extras?.let {
-            it.containsKey(Notification.EXTRA_MEDIA_SESSION) ||
-                    it.getString(Notification.EXTRA_TEMPLATE)?.contains("MediaStyle") == true
-        } ?: false
+        if (sbn == null || sbn.packageName != "com.android.dialer") return
+        val extras = sbn.notification?.extras ?: return
+        val verificationText = extras.getString("android.verificationText")
+        if (verificationText != null) {
+            val title = extras.getString("android.title") ?: return
+            ToolboxServiceState.callerChannel.trySend(title)
+        }
     }
 }

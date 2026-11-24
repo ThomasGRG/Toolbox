@@ -48,13 +48,12 @@ enum class LogMessage(@StringRes val msgResId: Int, val id: Int) {
     VOL_DOWN(R.string.volume_down_pressed, 34),
 
     INCOMING_CALL(R.string.incoming_call, 35),
-    CALL_IDLE_OFF_HOOK(R.string.call_idle_off_hook, 36),
+    CALL_IDLE(R.string.call_idle, 36),
+    CALL_OFF_HOOK(R.string.call_off_hook, 37),
 
-    PLAYBACK_STARTED(R.string.player_start, 37),
-    PLAYBACK_ERROR(R.string.player_error, 38),
-    PLAYER_RELEASED(R.string.player_released, 39),
+    PLAYBACK_STARTED(R.string.player_start, 38),
+    PLAYBACK_ERROR(R.string.player_error, 39),
+    PLAYER_RELEASED(R.string.player_released, 40),
 
-    FILE_NOT_EXISTS(R.string.file_not_exist, 40),
-
-    NOTIFICATION_POSTED(R.string.notification_posted, 41),
+    FILE_NOT_EXISTS(R.string.file_not_exist, 41),
 }

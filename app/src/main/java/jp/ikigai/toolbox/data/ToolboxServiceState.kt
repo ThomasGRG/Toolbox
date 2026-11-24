@@ -1,13 +1,13 @@
 package jp.ikigai.toolbox.data
 
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 object ToolboxServiceState {
+    val callerChannel = Channel<String>(Channel.RENDEZVOUS)
+
     private val _toolboxState = MutableStateFlow(false)
     val toolboxState = _toolboxState.asStateFlow()
 
@@ -41,16 +41,5 @@ object ToolboxServiceState {
 
     fun updateSunlightMonitorState(state: Boolean) {
         _sunlightMonitorState.update { state }
-    }
-
-    private val _notificationSounds = MutableSharedFlow<String>(
-        replay = 0,
-        extraBufferCapacity = 6,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-    val notificationSounds = _notificationSounds.asSharedFlow()
-
-    fun postNotificationSound(packageName: String) {
-        _notificationSounds.tryEmit(packageName)
     }
 }
